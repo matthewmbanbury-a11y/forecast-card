@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
       --bg:      #0d1117;
       --surface: #161b22;
@@ -25,60 +25,79 @@
     html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; overflow:hidden; }
     body { display:flex; flex-direction:column; }
 
-    /* Header */
-    .header { display:flex; align-items:center; justify-content:space-between; padding:13px 16px 11px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    /* ── Header ── */
+    .header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 10px; border-bottom:1px solid var(--border); flex-shrink:0; }
     .header-left { display:flex; align-items:center; gap:9px; }
     .header-icon { width:26px; height:26px; background:linear-gradient(135deg,var(--blue),var(--purple)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
-    .header-title { font-size:13px; font-weight:600; }
+    .header-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; }
     .header-sub { font-size:10px; color:var(--muted); margin-top:1px; }
-    .badges { display:flex; gap:6px; }
-    .badge { font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px; border-radius:20px; font-weight:500; }
+    .badges { display:flex; gap:5px; flex-shrink:0; }
+    .badge { font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px; border-radius:20px; font-weight:500; white-space:nowrap; }
     .badge-green  { background:rgba(63,185,80,0.15);   color:var(--green);  border:1px solid rgba(63,185,80,0.3); }
     .badge-blue   { background:rgba(88,166,255,0.15);  color:var(--blue);   border:1px solid rgba(88,166,255,0.3); }
     .badge-yellow { background:rgba(210,153,34,0.15);  color:var(--yellow); border:1px solid rgba(210,153,34,0.3); }
     .badge-red    { background:rgba(247,129,102,0.15); color:var(--red);    border:1px solid rgba(247,129,102,0.3); }
 
-    /* Toggle */
-    .toggle-wrap { display:flex; gap:0; padding:9px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
-    .toggle-btn { flex:1; padding:5px 0; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; background:var(--surface2); color:var(--muted); border:1px solid var(--border); cursor:pointer; transition:all 0.15s; }
-    .toggle-btn:first-child { border-radius:6px 0 0 6px; }
-    .toggle-btn:last-child  { border-radius:0 6px 6px 0; border-left:none; }
-    .toggle-btn.active { background:rgba(88,166,255,0.15); color:var(--blue); border-color:rgba(88,166,255,0.35); z-index:1; }
+    /* ── RAG banner ── */
+    .rag { display:flex; align-items:center; gap:10px; padding:10px 14px; flex-shrink:0; border-bottom:1px solid var(--border); }
+    .rag-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .rag-label { font-size:13px; font-weight:600; }
+    .rag-reason { font-size:11px; color:var(--muted); margin-left:2px; }
+    .rag-green  .rag-dot { background:var(--green); box-shadow:0 0 6px rgba(63,185,80,0.5); }
+    .rag-green  .rag-label { color:var(--green); }
+    .rag-yellow .rag-dot { background:var(--yellow); box-shadow:0 0 6px rgba(210,153,34,0.5); }
+    .rag-yellow .rag-label { color:var(--yellow); }
+    .rag-red    .rag-dot { background:var(--red); box-shadow:0 0 6px rgba(247,129,102,0.5); }
+    .rag-red    .rag-label { color:var(--red); }
 
-    /* Stats */
+    /* ── Stats ── */
     .stats { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); flex-shrink:0; }
-    .stat { padding:10px 14px; border-right:1px solid var(--border); }
+    .stat { padding:9px 12px; border-right:1px solid var(--border); }
     .stat:last-child { border-right:none; }
     .stat-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; }
-    .stat-value { font-family:'DM Mono',monospace; font-size:17px; font-weight:500; }
-    .stat-delta { font-size:10px; margin-top:2px; color:var(--muted); }
+    .stat-value { font-family:'DM Mono',monospace; font-size:16px; font-weight:500; line-height:1; }
+    .stat-delta { font-size:10px; margin-top:3px; color:var(--muted); }
     .up   { color:var(--green); }
     .down { color:var(--red); }
+    .warn { color:var(--yellow); }
 
-    /* Chart */
-    .chart-area { flex:1; padding:12px 14px 8px; min-height:0; position:relative; display:flex; flex-direction:column; }
-    .chart-legend { display:flex; gap:14px; margin-bottom:8px; flex-wrap:wrap; flex-shrink:0; }
-    .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); }
-    .legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-    .legend-dash { width:18px; height:2px; flex-shrink:0; }
-    canvas { flex:1; min-height:0; }
+    /* ── Chart ── */
+    .chart-area { padding:10px 14px 6px; flex-shrink:0; }
+    .chart-legend { display:flex; gap:12px; margin-bottom:7px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--muted); }
+    .legend-dot  { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .legend-dash { width:16px; height:2px; flex-shrink:0; }
+    .chart-canvas-wrap { position:relative; height:110px; }
 
-    /* Prob score */
-    .prob-bar-wrap { padding:6px 14px 8px; border-top:1px solid var(--border); flex-shrink:0; }
-    .prob-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:4px; display:flex; justify-content:space-between; }
-    .prob-bar-bg { height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
-    .prob-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+    /* ── Recommendations ── */
+    .recs { flex:1; overflow-y:auto; padding:0; min-height:0; }
+    .recs::-webkit-scrollbar { width:3px; }
+    .recs::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+    .rec { display:flex; align-items:flex-start; gap:9px; padding:9px 14px; border-bottom:1px solid var(--border); animation:fadeIn 0.2s ease both; }
+    .rec:last-child { border-bottom:none; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+    .rec-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+    .rec-body { flex:1; min-width:0; }
+    .rec-title { font-size:12px; font-weight:500; color:var(--text); margin-bottom:2px; }
+    .rec-detail { font-size:10px; color:var(--muted); line-height:1.5; }
+    .rec-priority-high   .rec-title { color:var(--red); }
+    .rec-priority-medium .rec-title { color:var(--yellow); }
+    .rec-priority-low    .rec-title { color:var(--blue); }
 
-    /* States */
+    /* ── Predicted fill ── */
+    .fill-pred { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-top:1px solid var(--border); flex-shrink:0; background:var(--surface); }
+    .fill-pred-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+    .fill-pred-value { font-size:11px; font-weight:600; font-family:'DM Mono',monospace; }
+
+    /* ── States ── */
     .state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
     .state-icon { font-size:26px; }
     .state-title { font-size:13px; font-weight:600; }
     .state-msg { font-size:11px; color:var(--muted); text-align:center; max-width:260px; line-height:1.6; }
     .spinner { width:22px; height:22px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin 0.75s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .retry-btn { margin-top:2px; padding:5px 14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:11px; border-radius:6px; cursor:pointer; transition:border-color 0.15s; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .retry-btn { margin-top:2px; padding:5px 14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:11px; border-radius:6px; cursor:pointer; }
     .retry-btn:hover { border-color:var(--blue); color:var(--blue); }
-
     .hidden { display:none !important; }
   </style>
 </head>
@@ -90,32 +109,33 @@
       <div class="header-icon">📈</div>
       <div>
         <div class="header-title" id="jobTitle">—</div>
-        <div class="header-sub" id="jobSub">Forecast · Fill probability</div>
+        <div class="header-sub" id="jobSub">—</div>
       </div>
     </div>
     <div class="badges">
-      <span class="badge badge-green hidden" id="badgeStatus"></span>
-      <span class="badge badge-blue  hidden" id="badgeType"></span>
+      <span class="badge hidden" id="badgeStatus"></span>
+      <span class="badge badge-blue hidden" id="badgeType"></span>
     </div>
   </div>
 
-  <!-- Toggle: Company / Role -->
-  <div class="toggle-wrap hidden" id="toggleWrap">
-    <button class="toggle-btn active" id="btnCompany" onclick="switchView(0)">Company</button>
-    <button class="toggle-btn"        id="btnRole"    onclick="switchView(1)">Role / State</button>
+  <!-- RAG -->
+  <div class="rag hidden" id="rag">
+    <div class="rag-dot"></div>
+    <span class="rag-label" id="ragLabel">—</span>
+    <span class="rag-reason" id="ragReason">—</span>
   </div>
 
   <!-- Stats -->
   <div class="stats hidden" id="stats">
     <div class="stat">
-      <div class="stat-label">Submissions</div>
+      <div class="stat-label">CVs Sent</div>
       <div class="stat-value" id="sSubs">—</div>
       <div class="stat-delta" id="dSubs"></div>
     </div>
     <div class="stat">
-      <div class="stat-label">Avg Days to Fill</div>
-      <div class="stat-value" id="sAvgDays">—</div>
-      <div class="stat-delta" id="dAvgDays"></div>
+      <div class="stat-label">CV/Week</div>
+      <div class="stat-value" id="sVelocity">—</div>
+      <div class="stat-delta" id="dVelocity"></div>
     </div>
     <div class="stat">
       <div class="stat-label">Days Open</div>
@@ -132,38 +152,38 @@
   <!-- Chart -->
   <div class="chart-area hidden" id="chartArea">
     <div class="chart-legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div><span>Historic Jobs (days to fill)</span></div>
-      <div class="legend-item"><div class="legend-dash" style="background:#f78166"></div><span>This Job (days open)</span></div>
-      <div class="legend-item"><div class="legend-dash" style="background:rgba(88,166,255,0.4);border-top:1px dashed"></div><span>Avg to fill</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div><span>Company filled jobs</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f78166"></div><span>Today</span></div>
+      <div class="legend-item"><div class="legend-dash" style="background:rgba(88,166,255,0.5)"></div><span>Avg fill</span></div>
     </div>
-    <canvas id="chart"></canvas>
+    <div class="chart-canvas-wrap">
+      <canvas id="chart"></canvas>
+    </div>
   </div>
 
-  <!-- Probability bar -->
-  <div class="prob-bar-wrap hidden" id="probWrap">
-    <div class="prob-label">
-      <span>Fill Probability</span>
-      <span id="probPct">—</span>
-    </div>
-    <div class="prob-bar-bg">
-      <div class="prob-bar-fill" id="probFill" style="width:0%"></div>
-    </div>
+  <!-- Recommendations -->
+  <div class="recs hidden" id="recs"></div>
+
+  <!-- Predicted fill -->
+  <div class="fill-pred hidden" id="fillPred">
+    <span class="fill-pred-label">Predicted fill</span>
+    <span class="fill-pred-value" id="fillPredValue">—</span>
   </div>
 
   <!-- Loading -->
   <div class="state" id="stateLoading">
     <div class="spinner"></div>
-    <div class="state-msg">Loading forecast data…</div>
+    <div class="state-msg">Loading forecast…</div>
   </div>
 
-  <!-- Error: no connection -->
+  <!-- No connection -->
   <div class="state hidden" id="stateNoConn">
     <div class="state-icon">🔌</div>
     <div class="state-title">Cannot connect to Bullhorn</div>
-    <div class="state-msg">This card can only run inside Bullhorn as a Custom Card on a Job record.</div>
+    <div class="state-msg">Open this card from a Job record.</div>
   </div>
 
-  <!-- Error: data error -->
+  <!-- Error -->
   <div class="state hidden" id="stateError">
     <div class="state-icon">⚠️</div>
     <div class="state-title">Could not load data</div>
@@ -173,293 +193,432 @@
 
   <script>
   // ─────────────────────────────────────────────────────────────────
-  //  Util — ported from shared/app/util/util.ts
+  //  Utilities
   // ─────────────────────────────────────────────────────────────────
-  const ONE_DAY = 24 * 60 * 60 * 1000;
+  const ONE_DAY = 86400000;
+  const fmtDate = ts => new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  const daysSince = ts => Math.round((Date.now() - ts) / ONE_DAY);
+  const daysUntil = ts => Math.round((ts - Date.now()) / ONE_DAY);
+  const addDays   = (ts, n) => ts + n * ONE_DAY;
+  const daysBetween = (a, b) => Math.round(Math.abs(a - b) / ONE_DAY);
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  function daysBetween(a, b) { return Math.round(Math.abs(a - b) / ONE_DAY); }
-  function daysSince(ts)     { return Math.round((Date.now() - ts) / ONE_DAY); }
-  function daysUntil(ts)     { return Math.round((ts - Date.now()) / ONE_DAY); }
-  function addDays(d, n)     { return new Date(d.getTime() + n * ONE_DAY); }
-  function subtractDays(d,n) { return new Date(d.getTime() - n * ONE_DAY); }
-
-  // Harmonic mean (matches compute-hmean behaviour — ignores zeros)
   function harmonicMean(arr) {
     const pos = arr.filter(n => n > 0);
     if (!pos.length) return 0;
-    return pos.length / pos.reduce((s, n) => s + 1/n, 0);
-  }
-
-  function createHistoricJobs(jobs) {
-    const records = [];
-    jobs.forEach(job => {
-      if (!job.submissions?.data?.length || !job.placements?.data?.length) return;
-      if (job.submissions.data.length < job.submissions.total ||
-          job.placements.data.length < job.placements.total) return;
-
-      const firstFill = [...job.placements.data].sort((a,b) => a.dateAdded - b.dateAdded)[0];
-      const firstSuccessfulSubmit = [...job.submissions.data]
-        .sort((a,b) => a.dateAdded - b.dateAdded)
-        .find(s => s.jobOrder?.id === firstFill.jobOrder?.id);
-      if (!firstSuccessfulSubmit) return;
-      if (firstSuccessfulSubmit.dateAdded > firstFill.dateAdded) return;
-
-      const daysToFill   = Math.max(daysBetween(job.dateAdded, firstFill.dateAdded), 0);
-      const daysToSubmit = Math.max(daysBetween(job.dateAdded, firstSuccessfulSubmit.dateAdded), 0);
-      if (daysToFill === 0) return;
-
-      records.push({
-        id:                       job.id,
-        title:                    job.title,
-        dateAdded:                job.dateAdded,
-        daysToFirstFill:          daysToFill,
-        daysToFirstSuccessfulSubmit: daysToSubmit,
-        submitToFillRate:         job.placements.total / job.submissions.total,
-        billRate:                 job.clientBillRate || 0,
-      });
-    });
-    return records;
-  }
-
-  function createHistoricJobsAndAverages(numJobs, numSubmitted, numFilled, jobData) {
-    const jobs = createHistoricJobs(jobData);
-    const avgs = {
-      totalJobs:                   numJobs,
-      jobsSubmitted:               numSubmitted,
-      jobsFilled:                  numFilled,
-      daysToFirstFill:             harmonicMean(jobs.map(j => j.daysToFirstFill)),
-      daysToFirstSuccessfulSubmit: harmonicMean(jobs.map(j => j.daysToFirstSuccessfulSubmit)),
-      submitToFillRate:            numSubmitted > 0 ? numFilled / numSubmitted : 0,
-      billRate:                    harmonicMean(jobs.map(j => j.billRate)),
-    };
-    return { jobs, averages: avgs };
-  }
-
-  function computeAverages(categories) {
-    return {
-      totalJobs:                   categories.reduce((s,c) => s + c.averages.totalJobs, 0),
-      jobsSubmitted:               categories.reduce((s,c) => s + c.averages.jobsSubmitted, 0),
-      jobsFilled:                  categories.reduce((s,c) => s + c.averages.jobsFilled, 0),
-      daysToFirstFill:             harmonicMean(categories.map(c => c.averages.daysToFirstFill)),
-      daysToFirstSuccessfulSubmit: harmonicMean(categories.map(c => c.averages.daysToFirstSuccessfulSubmit)),
-      submitToFillRate:            harmonicMean(categories.map(c => c.averages.submitToFillRate)),
-      billRate:                    harmonicMean(categories.map(c => c.averages.billRate)),
-    };
-  }
-
-  function numOpeningsToAvgPlacements(n) { return Math.min(n,8) * 0.253 + 0.112; }
-  function avgSubmitsPerFill(n)          { return n * 0.516 + 2.62; }
-
-  function computeProbability(numSubs, daysRemaining, numOpenings, averages) {
-    const avgFills    = numOpeningsToAvgPlacements(numOpenings);
-    const avgSubmits  = avgSubmitsPerFill(avgFills);
-    const submitOpp   = (avgSubmits - numSubs) / avgSubmits;
-    const daysProb    = Math.max(daysRemaining / (averages.daysToFirstSuccessfulSubmit || 1), averages.submitToFillRate || 0);
-    return Math.min(Math.max(submitOpp * daysProb, 0), 1);
-  }
-
-  function getProbabilityScore(daysSpent, averages) {
-    if (daysSpent < averages.daysToFirstSuccessfulSubmit) return 'high';
-    if (daysSpent / (averages.daysToFirstSuccessfulSubmit || 1) < 3) return 'medium';
-    return 'low';
-  }
-
-  function calculateHistogram(numbers, maxBuckets) {
-    const h = new Array(maxBuckets).fill(0);
-    numbers.forEach(n => { if (n < h.length) h[n]++; });
-    return h;
+    return pos.length / pos.reduce((s,n) => s + 1/n, 0);
   }
 
   // ─────────────────────────────────────────────────────────────────
-  //  AppBridge via post-robot (same lib novo-elements uses)
+  //  AppBridge
   // ─────────────────────────────────────────────────────────────────
   function getParam(k) { return new URLSearchParams(location.search).get(k); }
 
-  let registered = false;
   let regAttempts = 0;
-  const MAX_ATTEMPTS = 4;
-  const RETRY_MS = 500;
+  const MAX_REG = 4;
 
   function register() {
     regAttempts++;
-    postRobot.sendToParent('register', { title: 'La Fosse Forecast Card' }, { timeout: 5000 })
-      .then(() => { registered = true; onRegistered(true); })
+    postRobot.sendToParent('register', { title: 'La Fosse Forecast' }, { timeout: 5000 })
+      .then(() => onRegistered(true))
       .catch(() => {
-        if (regAttempts < MAX_ATTEMPTS) setTimeout(register, RETRY_MS);
+        if (regAttempts < MAX_REG) setTimeout(register, 500);
         else onRegistered(false);
       });
   }
 
-  function bhGet(relativeURL) {
-    return postRobot.sendToParent('httpGET', { relativeURL }, { timeout: 20000 })
+  function bhGet(url) {
+    return postRobot.sendToParent('httpGET', { relativeURL: url }, { timeout: 20000 })
       .then(evt => {
         const p = evt.data;
-        if (!p) throw new Error('Empty AppBridge response');
-        if (p.error) throw new Error(typeof p.error === 'string' ? p.error : JSON.stringify(p.error));
+        if (!p) throw new Error('Empty response');
+        if (p.error) throw new Error(JSON.stringify(p.error));
         return p.data;
       });
   }
 
-  function bhPost(relativeURL, body) {
-    return postRobot.sendToParent('httpPOST', { relativeURL, data: body }, { timeout: 20000 })
+  function bhPost(url, body) {
+    return postRobot.sendToParent('httpPOST', { relativeURL: url, data: body }, { timeout: 20000 })
       .then(evt => {
         const p = evt.data;
-        if (!p) throw new Error('Empty AppBridge response');
-        if (p.error) throw new Error(typeof p.error === 'string' ? p.error : JSON.stringify(p.error));
+        if (!p) throw new Error('Empty response');
+        if (p.error) throw new Error(JSON.stringify(p.error));
         return p.data;
       });
   }
 
   // ─────────────────────────────────────────────────────────────────
-  //  Data fetching — mirrors recordCard.component.ts exactly
+  //  Data fetching
   // ─────────────────────────────────────────────────────────────────
   const JOB_FIELDS = [
-    'id','clientCorporation','title','dateAdded','startDate','dateClosed',
-    'numOpenings','clientBillRate','address(state)',
-    'submissions[10](dateAdded,jobOrder(id))',
-    'placements[10](dateAdded,jobOrder(id))',
-    'employmentType','status'
+    'id','title','status','employmentType','dateAdded','startDate',
+    'numOpenings','clientBillRate','clientCorporation(id,name)',
+    'owner(id,firstName,lastName)',
+    'submissions[50](dateAdded,status,jobOrder(id))',
+    'placements[50](dateAdded,jobOrder(id))',
+    'address(state,city)'
+  ].join(',');
+
+  const HIST_FIELDS = [
+    'id','dateAdded',
+    'submissions[50](dateAdded,status,jobOrder(id))',
+    'placements[50](dateAdded,jobOrder(id))'
   ].join(',');
 
   function search(query, fields, count) {
     return bhPost('search/JobOrder', { query, fields, count, sort:'-dateAdded', start:0 });
   }
 
-  async function fetchCurrentJob(entityId) {
-    const res = await bhGet(`entity/JobOrder/${entityId}?fields=${JOB_FIELDS}&meta=basic`);
-    // AppBridge GET returns: { data: <entity>, meta: ... }
-    return res;
+  async function fetchJob(id) {
+    const res = await bhGet(`entity/JobOrder/${id}?fields=${JOB_FIELDS}&meta=off`);
+    return res.data || res;
   }
 
-  async function fetchAllHistoricData(job) {
-    const notDeleted            = 'isDeleted:false';
-    const withSub               = 'submissions.id:[0 TO 99999999999]';
-    const withPlac              = 'placements.id:[0 TO 99999999999]';
-    const compBase              = `clientCorporation.id:${job.clientCorporation.id} AND ${notDeleted}`;
-    const roleBase              = `address.state:${job.address.state} AND ${notDeleted}`;
+  async function fetchCompanyData(corpId, currentJobId) {
+    const base    = `clientCorporation.id:${corpId} AND isDeleted:false`;
+    const withSub = `${base} AND submissions.id:[0 TO 99999999999]`;
+    const withPlac = `${base} AND placements.id:[0 TO 99999999999]`;
 
-    const [c0, c1, c2, r0, r1, r2] = await Promise.all([
-      search(compBase,                           'id',        1),
-      search(`${compBase} AND ${withSub}`,       'id',        1),
-      search(`${compBase} AND ${withPlac}`,      JOB_FIELDS, 400),
-      search(roleBase,                           'id',        1),
-      search(`${roleBase} AND ${withSub}`,       'id',        1),
-      search(`${roleBase} AND ${withPlac}`,      JOB_FIELDS, 400),
+    const [total, withSubRes, filledRes] = await Promise.all([
+      search(base,     'id', 1),
+      search(withSub,  'id', 1),
+      search(withPlac, HIST_FIELDS, 400),
     ]);
 
-    return [
-      createHistoricJobsAndAverages(c0.total, c1.total, c2.total, c2.data),
-      createHistoricJobsAndAverages(r0.total, r1.total, r2.total, r2.data),
-    ];
+    // Build historic filled jobs (excluding current)
+    const filledJobs = (filledRes.data || [])
+      .filter(j => String(j.id) !== String(currentJobId))
+      .map(j => {
+        if (!j.submissions?.data?.length || !j.placements?.data?.length) return null;
+        if (j.submissions.data.length < j.submissions.total) return null;
+        if (j.placements.data.length  < j.placements.total)  return null;
+
+        const firstPlac = [...j.placements.data].sort((a,b) => a.dateAdded - b.dateAdded)[0];
+        const firstSub  = [...j.submissions.data].sort((a,b) => a.dateAdded - b.dateAdded)[0];
+        if (!firstSub || !firstPlac) return null;
+        if (firstSub.dateAdded > firstPlac.dateAdded) return null;
+
+        const daysToFill = Math.max(daysBetween(j.dateAdded, firstPlac.dateAdded), 1);
+        const daysToSub  = Math.max(daysBetween(j.dateAdded, firstSub.dateAdded), 0);
+        const totalSubs  = j.submissions.total || j.submissions.data.length;
+
+        return { daysToFill, daysToSub, totalSubs };
+      })
+      .filter(Boolean);
+
+    return {
+      totalJobs:    total.total || 0,
+      jobsWithSubs: withSubRes.total || 0,
+      jobsFilled:   filledRes.total  || 0,
+      filledJobs,
+      avgDaysToFill:    harmonicMean(filledJobs.map(j => j.daysToFill)) || 0,
+      avgDaysToFirstSub:harmonicMean(filledJobs.map(j => j.daysToSub))  || 0,
+      avgSubsToFill:    harmonicMean(filledJobs.map(j => j.totalSubs))  || 0,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────────
-  //  App state
+  //  Analysis — derive insights from real data
   // ─────────────────────────────────────────────────────────────────
-  let currentJob       = null;
-  let historicCats     = null;   // [companyCategory, roleCategory]
-  let averages         = null;
-  let activeView       = 0;      // 0 = Company, 1 = Role
-  let chartInstance    = null;
+  function analyse(job, company) {
+    const now        = Date.now();
+    const daysOpen   = daysSince(job.dateAdded);
+    const subs       = job.submissions?.data || [];
+    const totalSubs  = job.submissions?.total || subs.length;
+    const totalPlacs = job.placements?.total  || 0;
+
+    // Submission velocity — CVs per week over last 14 days vs prior 14 days
+    const recent14   = subs.filter(s => now - s.dateAdded < 14 * ONE_DAY).length;
+    const prior14    = subs.filter(s => {
+      const age = now - s.dateAdded;
+      return age >= 14 * ONE_DAY && age < 28 * ONE_DAY;
+    }).length;
+    const velocityNow  = +(recent14 / 2).toFixed(1); // per week
+    const velocityPrev = +(prior14  / 2).toFixed(1);
+    const velocityTrend = velocityNow > velocityPrev ? 'up' : velocityNow < velocityPrev ? 'down' : 'flat';
+
+    // Days since last submission
+    const subDates      = subs.map(s => s.dateAdded).sort((a,b) => b - a);
+    const daysSinceLastSub = subDates.length ? daysSince(subDates[0]) : daysOpen;
+
+    // Submission statuses
+    const interviews = subs.filter(s => {
+      const st = (s.status||'').toLowerCase();
+      return st.includes('interview') || st.includes('1st') || st.includes('2nd');
+    }).length;
+    const offers = subs.filter(s => (s.status||'').toLowerCase().includes('offer')).length;
+
+    // Company benchmarks
+    const avgFill    = company.avgDaysToFill;
+    const avgFirstSub = company.avgDaysToFirstSub;
+    const avgSubs    = company.avgSubsToFill;
+    const fillRate   = company.totalJobs > 0
+      ? Math.round((company.jobsFilled / company.totalJobs) * 100)
+      : 0;
+
+    // Pace vs average — where should we be at this point?
+    const paceRatio  = avgFill > 0 ? daysOpen / avgFill : 0; // 0=start, 1=avg fill day
+    const expectedSubsAtThisPoint = avgSubs > 0 ? Math.round(avgSubs * paceRatio) : 0;
+    const subsVsExpected = totalSubs - expectedSubsAtThisPoint;
+
+    // Predicted fill date — based on velocity
+    let predictedFillDate = null;
+    let predictedFillLabel = 'Insufficient data';
+    if (avgFill > 0 && daysOpen < avgFill * 3) {
+      // If we're behind on subs, add proportional days
+      const behindDays = subsVsExpected < 0 && avgSubs > 0
+        ? Math.round((Math.abs(subsVsExpected) / avgSubs) * avgFill)
+        : 0;
+      const predictedDaysToFill = Math.max(avgFill - daysOpen + behindDays, 1);
+      predictedFillDate = addDays(now, predictedDaysToFill);
+      predictedFillLabel = fmtDate(predictedFillDate);
+    }
+    if (totalPlacs > 0) predictedFillLabel = 'Filled ✓';
+
+    // ── RAG status ──
+    let rag, ragReason;
+
+    if (totalPlacs > 0) {
+      rag = 'green'; ragReason = 'Placement made';
+    } else if (daysOpen > avgFill * 2.5 && avgFill > 0) {
+      rag = 'red'; ragReason = `${daysOpen} days open — ${Math.round(daysOpen - avgFill)} days over average`;
+    } else if (daysSinceLastSub > 10 && totalSubs > 0) {
+      rag = 'red'; ragReason = `No CVs sent in ${daysSinceLastSub} days`;
+    } else if (daysSinceLastSub > 7 && totalSubs === 0) {
+      rag = 'red'; ragReason = 'No CVs sent yet';
+    } else if (subsVsExpected < -2 || (daysOpen > avgFill && avgFill > 0)) {
+      rag = 'yellow'; ragReason = 'Behind expected submission pace';
+    } else if (velocityTrend === 'down' && totalSubs > 0) {
+      rag = 'yellow'; ragReason = 'Submission rate slowing';
+    } else {
+      rag = 'green'; ragReason = 'On track';
+    }
+
+    // ── Recommendations ──
+    const recs = [];
+
+    // No CVs at all
+    if (totalSubs === 0 && daysOpen > 3) {
+      recs.push({
+        priority: 'high',
+        icon: '🚨',
+        title: 'No CVs sent yet',
+        detail: `Job has been open ${daysOpen} days with no submissions. Start sourcing immediately.`
+      });
+    }
+
+    // Pipeline gone quiet
+    if (daysSinceLastSub > 7 && totalSubs > 0 && totalPlacs === 0) {
+      recs.push({
+        priority: 'high',
+        icon: '⏸️',
+        title: `Pipeline stalled — last CV sent ${daysSinceLastSub} days ago`,
+        detail: avgFill > 0
+          ? `Similar ${job.clientCorporation.name} roles fill in ~${Math.round(avgFill)} days. Reactivate search now.`
+          : 'No recent activity. Review candidate pipeline.'
+      });
+    }
+
+    // Behind on submissions vs pace
+    if (subsVsExpected < -2 && totalPlacs === 0) {
+      recs.push({
+        priority: 'high',
+        icon: '📉',
+        title: `${Math.abs(subsVsExpected)} fewer CVs than expected at day ${daysOpen}`,
+        detail: avgSubs > 0
+          ? `${job.clientCorporation.name} roles typically need ~${Math.round(avgSubs)} CVs to fill. You have ${totalSubs}.`
+          : 'Behind expected submission pace for this client.'
+      });
+    }
+
+    // Interviews but no offers
+    if (interviews >= 2 && offers === 0 && totalPlacs === 0) {
+      recs.push({
+        priority: 'medium',
+        icon: '💬',
+        title: `${interviews} interviews — no offers yet`,
+        detail: 'Chase client for feedback. May indicate a brief, rate, or fit mismatch.'
+      });
+    }
+
+    // Velocity dropping
+    if (velocityTrend === 'down' && prior14 > 0 && totalPlacs === 0) {
+      recs.push({
+        priority: 'medium',
+        icon: '📊',
+        title: 'Submission rate dropping',
+        detail: `${velocityNow}/week this fortnight vs ${velocityPrev}/week previously. Widen search criteria or review shortlist.`
+      });
+    }
+
+    // Over average fill time
+    if (daysOpen > avgFill && avgFill > 0 && totalPlacs === 0) {
+      recs.push({
+        priority: 'medium',
+        icon: '⏰',
+        title: `${Math.round(daysOpen - avgFill)} days over average fill time`,
+        detail: `${job.clientCorporation.name} roles fill in ~${Math.round(avgFill)} days on average. Consider escalating to client.`
+      });
+    }
+
+    // Positive — good velocity
+    if (velocityTrend === 'up' && velocityNow >= 2 && totalPlacs === 0) {
+      recs.push({
+        priority: 'low',
+        icon: '✅',
+        title: 'Strong submission pace',
+        detail: `Sending ${velocityNow} CVs/week — above recent rate. Keep momentum.`
+      });
+    }
+
+    // Good position — ahead of pace
+    if (subsVsExpected >= 2 && daysOpen < avgFill && totalPlacs === 0) {
+      recs.push({
+        priority: 'low',
+        icon: '🎯',
+        title: 'Ahead of expected pace',
+        detail: `${totalSubs} CVs sent — ${subsVsExpected} more than typical at day ${daysOpen}. Good position.`
+      });
+    }
+
+    // No historic data for this client
+    if (company.jobsFilled < 3) {
+      recs.push({
+        priority: 'low',
+        icon: 'ℹ️',
+        title: 'Limited historic data for this client',
+        detail: `Only ${company.jobsFilled} filled jobs on record. Benchmarks may not be reliable.`
+      });
+    }
+
+    // Always show fill rate context
+    if (company.totalJobs > 5) {
+      recs.push({
+        priority: 'low',
+        icon: '📋',
+        title: `${fillRate}% fill rate at ${job.clientCorporation.name}`,
+        detail: `${company.jobsFilled} placements from ${company.totalJobs} jobs. ${
+          fillRate >= 50 ? 'Strong client relationship.' :
+          fillRate >= 30 ? 'Average conversion — worth discussing exclusivity.' :
+          'Low fill rate — review client brief quality.'
+        }`
+      });
+    }
+
+    return {
+      daysOpen, totalSubs, totalPlacs, velocityNow, velocityTrend,
+      velocityPrev, daysSinceLastSub, interviews, offers,
+      avgFill, avgSubs, fillRate, subसVsExpected: subsVsExpected,
+      expectedSubsAtThisPoint, predictedFillLabel,
+      rag, ragReason, recs
+    };
+  }
 
   // ─────────────────────────────────────────────────────────────────
   //  Rendering
   // ─────────────────────────────────────────────────────────────────
-  function render() {
-    const cat  = historicCats[activeView];
-    const avgs = cat.averages;
-    const job  = currentJob;
+  let chartInstance = null;
 
+  function render(job, company, data) {
     // Header
     document.getElementById('jobTitle').textContent = job.title || `Job #${job.id}`;
-    const corp = job.clientCorporation?.name || '';
-    document.getElementById('jobSub').textContent = `${corp} · Fill forecast`;
+    document.getElementById('jobSub').textContent =
+      `${job.clientCorporation?.name || ''} · ${job.owner?.firstName || ''} ${job.owner?.lastName || ''}`.trim();
 
     const bStatus = document.getElementById('badgeStatus');
-    bStatus.textContent = job.status || 'Open';
-    bStatus.className = 'badge ' + statusBadgeClass(job.status);
+    bStatus.textContent = job.status || '';
+    bStatus.className = 'badge ' + statusClass(job.status);
     bStatus.classList.remove('hidden');
 
     if (job.employmentType) {
-      const bType = document.getElementById('badgeType');
-      bType.textContent = job.employmentType;
-      bType.classList.remove('hidden');
+      const bt = document.getElementById('badgeType');
+      bt.textContent = job.employmentType;
+      bt.classList.remove('hidden');
     }
 
-    // Toggle labels
-    document.getElementById('btnCompany').textContent = corp || 'Company';
-    document.getElementById('btnRole').textContent    =
-      job.address?.state ? `${job.address.state} Region` : 'Role / State';
-    document.getElementById('btnCompany').classList.toggle('active', activeView === 0);
-    document.getElementById('btnRole').classList.toggle('active', activeView === 1);
-
-    // Dates / days
-    const creationDate = new Date(job.dateAdded);
-    const startDate    = new Date(job.startDate || 0);
-    const daysOpen     = daysSince(creationDate.getTime());
-    const daysUntilStart = daysUntil(startDate.getTime());
-    const daysBetweenCreationStart = daysBetween(creationDate.getTime(), startDate.getTime());
-
-    let projectedStartDate, projectedFillDate;
-    if (daysBetweenCreationStart > 5 && daysUntilStart > 0) {
-      projectedStartDate = subtractDays(startDate, avgs.daysToFirstFill);
-      projectedFillDate  = startDate;
-    } else {
-      projectedStartDate = creationDate;
-      projectedFillDate  = addDays(creationDate, avgs.daysToFirstFill);
-    }
-    const daysSpent     = daysSince(projectedStartDate.getTime());
-    const daysRemaining = daysUntil(projectedFillDate.getTime());
-
-    const numSubs     = job.submissions?.total || 0;
-    const numOpenings = Math.min(job.numOpenings || 1, 1);
-    const fillRate    = avgs.submitToFillRate;
+    // RAG
+    const ragEl = document.getElementById('rag');
+    ragEl.className = `rag rag-${data.rag}`;
+    document.getElementById('ragLabel').textContent =
+      data.rag === 'green' ? 'On Track' : data.rag === 'yellow' ? 'Needs Attention' : 'At Risk';
+    document.getElementById('ragReason').textContent = `— ${data.ragReason}`;
 
     // Stats
-    setValue('sSubs',     numSubs);
-    setValue('sAvgDays',  Math.round(avgs.daysToFirstFill) || '—');
-    setValue('sDaysOpen', daysOpen);
-    setValue('sFillRate', avgs.totalJobs > 0 ? `${Math.round(fillRate * 100)}%` : '—');
+    document.getElementById('sSubs').textContent     = data.totalSubs;
+    document.getElementById('sVelocity').textContent = data.velocityNow;
+    document.getElementById('sDaysOpen').textContent = data.daysOpen;
+    document.getElementById('sFillRate').textContent = `${data.fillRate}%`;
 
-    // Deltas vs avg
-    setDelta('dSubs',     numSubs,    avgSubmitsPerFill(numOpeningsToAvgPlacements(numOpenings)), false, 'needed');
-    document.getElementById('dAvgDays').textContent = `${avgs.jobsFilled} filled jobs`;
-    setDelta('dDaysOpen',  daysOpen,  avgs.daysToFirstFill, true, 'vs avg fill');
-    document.getElementById('dFillRate').textContent = `${avgs.jobsFilled}/${avgs.totalJobs} jobs`;
+    // Stat deltas
+    const subsVsExp = data.subसVsExpected;
+    document.getElementById('dSubs').innerHTML = data.avgSubs > 0
+      ? `<span class="${subsVsExp >= 0 ? 'up' : 'down'}">${subsVsExp >= 0 ? '↑' : '↓'} ${subsVsExp >= 0 ? '+' : ''}${subsVsExp} vs pace</span>`
+      : `<span class="warn">avg ${Math.round(data.avgSubs)} to fill</span>`;
 
-    // Probability
-    const prob     = computeProbability(numSubs, daysRemaining, numOpenings, avgs);
-    const score    = getProbabilityScore(daysSpent, avgs);
-    const scoreColors = { high:'#3fb950', medium:'#d29922', low:'#f78166' };
-    const pct      = Math.round(prob * 100);
-    document.getElementById('probPct').textContent   = `${pct}% · ${score.toUpperCase()}`;
-    document.getElementById('probFill').style.width  = `${pct}%`;
-    document.getElementById('probFill').style.background = scoreColors[score];
+    document.getElementById('dVelocity').innerHTML =
+      data.velocityTrend === 'up'   ? `<span class="up">↑ vs last 2wk</span>` :
+      data.velocityTrend === 'down' ? `<span class="down">↓ vs last 2wk</span>` :
+                                      `<span>→ steady</span>`;
 
-    // Chart — histogram of daysToFirstFill for historic jobs
-    renderChart(cat.jobs, daysOpen, Math.round(avgs.daysToFirstFill));
+    document.getElementById('dDaysOpen').innerHTML = data.avgFill > 0
+      ? `<span class="${data.daysOpen <= data.avgFill ? 'up' : 'down'}">${data.daysOpen <= data.avgFill ? '↓' : '↑'} avg ${Math.round(data.avgFill)}d</span>`
+      : '<span>no avg data</span>';
 
-    // Show UI
-    ['header','toggleWrap','stats','chartArea','probWrap'].forEach(id =>
+    document.getElementById('dFillRate').textContent =
+      `${company.jobsFilled}/${company.totalJobs} jobs`;
+
+    // Chart — histogram of daysToFill for historic filled jobs
+    renderChart(company.filledJobs, data.daysOpen, data.avgFill);
+
+    // Recommendations
+    const recsEl = document.getElementById('recs');
+    recsEl.innerHTML = '';
+    if (data.recs.length === 0) {
+      recsEl.innerHTML = `<div class="rec"><div class="rec-body"><div class="rec-title" style="color:var(--green)">✅ All looking good</div><div class="rec-detail">No actions needed right now.</div></div></div>`;
+    } else {
+      data.recs.forEach((rec, i) => {
+        const el = document.createElement('div');
+        el.className = `rec rec-priority-${rec.priority}`;
+        el.style.animationDelay = `${i * 40}ms`;
+        el.innerHTML = `
+          <div class="rec-icon">${rec.icon}</div>
+          <div class="rec-body">
+            <div class="rec-title">${esc(rec.title)}</div>
+            <div class="rec-detail">${esc(rec.detail)}</div>
+          </div>`;
+        recsEl.appendChild(el);
+      });
+    }
+
+    // Predicted fill
+    document.getElementById('fillPredValue').textContent = data.predictedFillLabel;
+
+    // Show all sections
+    ['header','rag','stats','chartArea','recs','fillPred'].forEach(id =>
       document.getElementById(id).classList.remove('hidden')
     );
     setState(null);
   }
 
-  function renderChart(historicJobs, daysOpen, avgDays) {
-    const MAX_BUCKETS = Math.max(avgDays * 2 + 10, 60);
-    const daysToFillArr = historicJobs.map(j => j.daysToFirstFill);
-    const histogram = calculateHistogram(daysToFillArr, MAX_BUCKETS);
+  function renderChart(filledJobs, daysOpen, avgFill) {
+    const MAX = Math.max(Math.round((avgFill || 30) * 2.5), 60);
+    const histogram = new Array(MAX).fill(0);
+    filledJobs.forEach(j => { if (j.daysToFill < MAX) histogram[j.daysToFill]++; });
 
-    const labels = Array.from({ length: MAX_BUCKETS }, (_, i) => i % 10 === 0 ? `Day ${i}` : '');
+    const labels = Array.from({ length: MAX }, (_, i) =>
+      i % 10 === 0 ? `Day ${i}` : ''
+    );
 
-    // Current job vertical line
-    const currentJobData = new Array(MAX_BUCKETS).fill(null);
-    if (daysOpen < MAX_BUCKETS) currentJobData[daysOpen] = Math.max(...histogram) || 1;
+    // Today line
+    const todayData = new Array(MAX).fill(null);
+    const todayIdx  = Math.min(Math.round(daysOpen), MAX - 1);
+    if (todayIdx >= 0) todayData[todayIdx] = Math.max(...histogram, 1);
 
-    // Avg vertical line
-    const avgData = new Array(MAX_BUCKETS).fill(null);
-    if (avgDays < MAX_BUCKETS) avgData[avgDays] = Math.max(...histogram) || 1;
+    // Avg line
+    const avgData  = new Array(MAX).fill(null);
+    const avgIdx   = Math.min(Math.round(avgFill), MAX - 1);
+    if (avgIdx > 0) avgData[avgIdx] = Math.max(...histogram, 1);
 
     if (chartInstance) chartInstance.destroy();
 
@@ -470,34 +629,32 @@
         labels,
         datasets: [
           {
-            label: 'Historic jobs (days to fill)',
+            label: 'Filled jobs',
             data: histogram,
-            backgroundColor: 'rgba(88,166,255,0.35)',
-            borderColor: 'rgba(88,166,255,0.7)',
+            backgroundColor: 'rgba(88,166,255,0.3)',
+            borderColor: 'rgba(88,166,255,0.6)',
             borderWidth: 1,
             borderRadius: 2,
           },
           {
-            label: 'This job (days open)',
-            data: currentJobData,
+            label: 'Today',
+            data: todayData,
             type: 'line',
             borderColor: '#f78166',
             borderWidth: 2,
             pointRadius: 0,
             fill: false,
-            tension: 0,
             spanGaps: false,
           },
           {
-            label: 'Avg days to fill',
+            label: 'Avg fill',
             data: avgData,
             type: 'line',
-            borderColor: 'rgba(88,166,255,0.7)',
+            borderColor: 'rgba(88,166,255,0.6)',
             borderDash: [4,3],
             borderWidth: 1.5,
             pointRadius: 0,
             fill: false,
-            tension: 0,
             spanGaps: false,
           },
         ]
@@ -513,8 +670,6 @@
             borderWidth: 1,
             titleColor: '#e6edf3',
             bodyColor: '#8b949e',
-            titleFont: { family:'DM Sans', size:11, weight:'600' },
-            bodyFont:  { family:'DM Sans', size:11 },
             callbacks: {
               title: items => `Day ${items[0].dataIndex}`,
               label: item => item.datasetIndex === 0
@@ -533,8 +688,7 @@
             grid: { color:'rgba(33,38,45,0.8)' },
             ticks: {
               color:'#8b949e', font:{ family:'DM Mono', size:9 },
-              stepSize: 1,
-              callback: v => Number.isInteger(v) ? v : null
+              stepSize:1, callback: v => Number.isInteger(v) ? v : null
             }
           }
         }
@@ -545,23 +699,11 @@
   // ─────────────────────────────────────────────────────────────────
   //  Helpers
   // ─────────────────────────────────────────────────────────────────
-  function setValue(id, val) { document.getElementById(id).textContent = val; }
-
-  function setDelta(id, actual, avg, invertGood, suffix) {
-    const el = document.getElementById(id);
-    const diff = Math.round(actual - avg);
-    const good = invertGood ? diff < 0 : diff > 0;
-    const bad  = invertGood ? diff > 0 : diff < 0;
-    const cls  = good ? 'up' : bad ? 'down' : '';
-    const arr  = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
-    const sign = diff > 0 ? '+' : '';
-    el.innerHTML = `<span class="${cls}">${arr} ${sign}${diff}</span> ${suffix}`;
-  }
-
-  function statusBadgeClass(s) {
+  function statusClass(s) {
     const sl = (s||'').toLowerCase();
-    if (sl.includes('open') || sl.includes('accepting')) return 'badge-green';
+    if (sl.includes('accepting') || sl.includes('open')) return 'badge-green';
     if (sl.includes('hold') || sl.includes('pending'))   return 'badge-yellow';
+    if (sl.includes('placed') || sl.includes('filled'))  return 'badge-blue';
     return 'badge-red';
   }
 
@@ -572,43 +714,26 @@
     if (id) document.getElementById(id).classList.remove('hidden');
   }
 
-  function switchView(idx) {
-    activeView = idx;
-    render();
-  }
-
   // ─────────────────────────────────────────────────────────────────
-  //  Main flow — mirrors ngOnInit / onRegistered / getCurrentJobData
+  //  Main
   // ─────────────────────────────────────────────────────────────────
   async function onRegistered(isRegistered) {
-    // Check all four params Bullhorn passes — same check as recordCard.component.ts
-    const entityId  = parseInt(getParam('EntityID'),  10);
-    const userId    = parseInt(getParam('UserID'),     10);
-    const corpId    = parseInt(getParam('CorporationID'), 10);
-    const plId      = parseInt(getParam('PrivateLabelID'), 10);
-    const connected = !!(entityId && userId && corpId && plId);
+    const entityId = parseInt(getParam('EntityID'), 10);
+    const userId   = parseInt(getParam('UserID'), 10);
+    const corpId   = parseInt(getParam('CorporationID'), 10);
+    const plId     = parseInt(getParam('PrivateLabelID'), 10);
 
-    if (!isRegistered || !connected) {
-      setState('stateNoConn');
-      return;
+    if (!isRegistered || !entityId || !userId || !corpId || !plId) {
+      setState('stateNoConn'); return;
     }
 
     try {
-      // 1. Get current job
-      const jobRes  = await fetchCurrentJob(entityId);
-      currentJob    = jobRes.data;
-      // submissions.total comes back on the nested object
-      currentJob.submissions = { total: jobRes.data.submissions?.total || 0, data: jobRes.data.submissions?.data || [] };
-
-      // 2. Get all historic data (6 parallel searches)
-      historicCats  = await fetchAllHistoricData(currentJob);
-      averages      = computeAverages(historicCats);
-
-      // 3. Render
-      render();
-
+      const job = await fetchJob(entityId);
+      const company = await fetchCompanyData(job.clientCorporation.id, entityId);
+      const data = analyse(job, company);
+      render(job, company, data);
     } catch (err) {
-      console.error('ForecastCard error:', err);
+      console.error('ForecastCard:', err);
       setState('stateError');
       document.getElementById('errMsg').textContent = err.message || String(err);
     }
@@ -616,10 +741,9 @@
 
   async function init() {
     setState('stateLoading');
-    ['header','toggleWrap','stats','chartArea','probWrap'].forEach(id =>
+    ['header','rag','stats','chartArea','recs','fillPred'].forEach(id =>
       document.getElementById(id).classList.add('hidden')
     );
-    registered  = false;
     regAttempts = 0;
     register();
   }
