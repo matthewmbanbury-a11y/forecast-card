@@ -4,828 +4,627 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forecast Card</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/post-robot/10.0.46/post-robot.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:       #0d1117;
-      --surface:  #161b22;
-      --border:   #21262d;
-      --text:     #e6edf3;
-      --muted:    #8b949e;
-      --accent:   #f78166;
-      --blue:     #58a6ff;
-      --green:    #3fb950;
-      --yellow:   #d29922;
-      --purple:   #bc8cff;
-      --forecast: rgba(88,166,255,0.15);
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --surface2:#1c2128;
+      --border:  #21262d;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --blue:    #58a6ff;
+      --green:   #3fb950;
+      --yellow:  #d29922;
+      --red:     #f78166;
+      --purple:  #bc8cff;
     }
+    html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; overflow:hidden; }
+    body { display:flex; flex-direction:column; }
 
-    html, body {
-      height: 100%;
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 13px;
-    }
+    /* Header */
+    .header { display:flex; align-items:center; justify-content:space-between; padding:13px 16px 11px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .header-left { display:flex; align-items:center; gap:9px; }
+    .header-icon { width:26px; height:26px; background:linear-gradient(135deg,var(--blue),var(--purple)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+    .header-title { font-size:13px; font-weight:600; }
+    .header-sub { font-size:10px; color:var(--muted); margin-top:1px; }
+    .badges { display:flex; gap:6px; }
+    .badge { font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px; border-radius:20px; font-weight:500; }
+    .badge-green  { background:rgba(63,185,80,0.15);   color:var(--green);  border:1px solid rgba(63,185,80,0.3); }
+    .badge-blue   { background:rgba(88,166,255,0.15);  color:var(--blue);   border:1px solid rgba(88,166,255,0.3); }
+    .badge-yellow { background:rgba(210,153,34,0.15);  color:var(--yellow); border:1px solid rgba(210,153,34,0.3); }
+    .badge-red    { background:rgba(247,129,102,0.15); color:var(--red);    border:1px solid rgba(247,129,102,0.3); }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      overflow: hidden;
-    }
+    /* Toggle */
+    .toggle-wrap { display:flex; gap:0; padding:9px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .toggle-btn { flex:1; padding:5px 0; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; background:var(--surface2); color:var(--muted); border:1px solid var(--border); cursor:pointer; transition:all 0.15s; }
+    .toggle-btn:first-child { border-radius:6px 0 0 6px; }
+    .toggle-btn:last-child  { border-radius:0 6px 6px 0; border-left:none; }
+    .toggle-btn.active { background:rgba(88,166,255,0.15); color:var(--blue); border-color:rgba(88,166,255,0.35); z-index:1; }
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px 10px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+    /* Stats */
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .stat { padding:10px 14px; border-right:1px solid var(--border); }
+    .stat:last-child { border-right:none; }
+    .stat-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; }
+    .stat-value { font-family:'DM Mono',monospace; font-size:17px; font-weight:500; }
+    .stat-delta { font-size:10px; margin-top:2px; color:var(--muted); }
+    .up   { color:var(--green); }
+    .down { color:var(--red); }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    /* Chart */
+    .chart-area { flex:1; padding:12px 14px 8px; min-height:0; position:relative; display:flex; flex-direction:column; }
+    .chart-legend { display:flex; gap:14px; margin-bottom:8px; flex-wrap:wrap; flex-shrink:0; }
+    .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); }
+    .legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .legend-dash { width:18px; height:2px; flex-shrink:0; }
+    canvas { flex:1; min-height:0; }
 
-    .header-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--blue), var(--purple));
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
+    /* Prob score */
+    .prob-bar-wrap { padding:6px 14px 8px; border-top:1px solid var(--border); flex-shrink:0; }
+    .prob-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:4px; display:flex; justify-content:space-between; }
+    .prob-bar-bg { height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .prob-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
 
-    .header-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: 0.01em;
-    }
+    /* States */
+    .state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
+    .state-icon { font-size:26px; }
+    .state-title { font-size:13px; font-weight:600; }
+    .state-msg { font-size:11px; color:var(--muted); text-align:center; max-width:260px; line-height:1.6; }
+    .spinner { width:22px; height:22px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin 0.75s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .retry-btn { margin-top:2px; padding:5px 14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:11px; border-radius:6px; cursor:pointer; transition:border-color 0.15s; }
+    .retry-btn:hover { border-color:var(--blue); color:var(--blue); }
 
-    .header-sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 20px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-
-    .badge-blue  { background: rgba(88,166,255,0.15); color: var(--blue); border: 1px solid rgba(88,166,255,0.3); }
-    .badge-green { background: rgba(63,185,80,0.15);  color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
-    .badge-amber { background: rgba(210,153,34,0.15); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
-    .badge-red   { background: rgba(247,129,102,0.15);color: var(--accent); border: 1px solid rgba(247,129,102,0.3); }
-
-    /* ── Stats row ── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .stat {
-      padding: 12px 16px;
-      border-right: 1px solid var(--border);
-      position: relative;
-    }
-    .stat:last-child { border-right: none; }
-
-    .stat-label {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-
-    .stat-value {
-      font-family: 'DM Mono', monospace;
-      font-size: 18px;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1;
-    }
-
-    .stat-delta {
-      font-size: 10px;
-      margin-top: 3px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-
-    .delta-up   { color: var(--green); }
-    .delta-down { color: var(--accent); }
-    .delta-flat { color: var(--muted); }
-
-    /* ── Chart area ── */
-    .chart-wrap {
-      flex: 1;
-      position: relative;
-      padding: 14px 16px 10px;
-      min-height: 0;
-    }
-
-    .chart-legend {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .legend-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .legend-line {
-      width: 20px; height: 2px;
-      flex-shrink: 0;
-    }
-
-    canvas {
-      width: 100% !important;
-    }
-
-    /* ── Loading ── */
-    .loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      background: var(--bg);
-      z-index: 10;
-    }
-
-    .spinner {
-      width: 28px; height: 28px;
-      border: 2px solid var(--border);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-text {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* ── Error ── */
-    .error-state {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: var(--bg);
-      z-index: 10;
-    }
-
-    .error-icon { font-size: 28px; }
-
-    .error-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .error-msg {
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      max-width: 260px;
-      line-height: 1.5;
-    }
-
-    .retry-btn {
-      margin-top: 4px;
-      padding: 5px 14px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .retry-btn:hover { border-color: var(--blue); color: var(--blue); }
-
-    /* ── Footer ── */
-    .footer {
-      padding: 8px 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .footer-note {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .forecast-zone-label {
-      font-size: 10px;
-      color: var(--blue);
-      font-family: 'DM Mono', monospace;
-    }
-
-    /* ── Tooltip ── */
-    .chart-tooltip {
-      position: absolute;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 11px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-      z-index: 20;
-      min-width: 120px;
-    }
-
-    /* hidden utility */
-    .hidden { display: none !important; }
+    .hidden { display:none !important; }
   </style>
 </head>
 <body>
 
   <!-- Header -->
-  <div class="header">
+  <div class="header hidden" id="header">
     <div class="header-left">
       <div class="header-icon">📈</div>
       <div>
-        <div class="header-title" id="jobTitle">Loading job…</div>
-        <div class="header-sub" id="jobMeta">Forecast · Submissions over time</div>
+        <div class="header-title" id="jobTitle">—</div>
+        <div class="header-sub" id="jobSub">Forecast · Fill probability</div>
       </div>
     </div>
-    <div class="header-right">
-      <span class="badge badge-blue" id="statusBadge">—</span>
-      <span class="badge" id="typeBadge" style="display:none"></span>
+    <div class="badges">
+      <span class="badge badge-green hidden" id="badgeStatus"></span>
+      <span class="badge badge-blue  hidden" id="badgeType"></span>
     </div>
   </div>
 
+  <!-- Toggle: Company / Role -->
+  <div class="toggle-wrap hidden" id="toggleWrap">
+    <button class="toggle-btn active" id="btnCompany" onclick="switchView(0)">Company</button>
+    <button class="toggle-btn"        id="btnRole"    onclick="switchView(1)">Role / State</button>
+  </div>
+
   <!-- Stats -->
-  <div class="stats">
+  <div class="stats hidden" id="stats">
     <div class="stat">
       <div class="stat-label">Submissions</div>
-      <div class="stat-value" id="statSubs">—</div>
-      <div class="stat-delta" id="statSubsDelta"></div>
+      <div class="stat-value" id="sSubs">—</div>
+      <div class="stat-delta" id="dSubs"></div>
     </div>
     <div class="stat">
-      <div class="stat-label">Interviews</div>
-      <div class="stat-value" id="statIntvs">—</div>
-      <div class="stat-delta" id="statIntvsDelta"></div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Placements</div>
-      <div class="stat-value" id="statPlacs">—</div>
-      <div class="stat-delta" id="statPlacsDelta"></div>
+      <div class="stat-label">Avg Days to Fill</div>
+      <div class="stat-value" id="sAvgDays">—</div>
+      <div class="stat-delta" id="dAvgDays"></div>
     </div>
     <div class="stat">
       <div class="stat-label">Days Open</div>
-      <div class="stat-value" id="statDays">—</div>
-      <div class="stat-delta" id="statDaysDelta"></div>
+      <div class="stat-value" id="sDaysOpen">—</div>
+      <div class="stat-delta" id="dDaysOpen"></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Fill Rate</div>
+      <div class="stat-value" id="sFillRate">—</div>
+      <div class="stat-delta" id="dFillRate"></div>
     </div>
   </div>
 
   <!-- Chart -->
-  <div class="chart-wrap" id="chartWrap">
+  <div class="chart-area hidden" id="chartArea">
     <div class="chart-legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background:#58a6ff"></div>
-        <span>This Job</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-line" style="background:#8b949e"></div>
-        <span>Similar Jobs (avg)</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-line" style="background:rgba(88,166,255,0.5); border-top: 1px dashed rgba(88,166,255,0.5)"></div>
-        <span>Forecast</span>
-      </div>
+      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div><span>Historic Jobs (days to fill)</span></div>
+      <div class="legend-item"><div class="legend-dash" style="background:#f78166"></div><span>This Job (days open)</span></div>
+      <div class="legend-item"><div class="legend-dash" style="background:rgba(88,166,255,0.4);border-top:1px dashed"></div><span>Avg to fill</span></div>
     </div>
-    <canvas id="forecastChart"></canvas>
+    <canvas id="chart"></canvas>
+  </div>
 
-    <div class="loading" id="loadingState">
-      <div class="spinner"></div>
-      <div class="loading-text">Loading forecast data…</div>
+  <!-- Probability bar -->
+  <div class="prob-bar-wrap hidden" id="probWrap">
+    <div class="prob-label">
+      <span>Fill Probability</span>
+      <span id="probPct">—</span>
     </div>
-
-    <div class="error-state hidden" id="errorState">
-      <div class="error-icon">⚠️</div>
-      <div class="error-title">Could not load data</div>
-      <div class="error-msg" id="errorMsg">Unable to connect to Bullhorn. Ensure this card is opened from a Job record.</div>
-      <button class="retry-btn" onclick="init()">Retry</button>
+    <div class="prob-bar-bg">
+      <div class="prob-bar-fill" id="probFill" style="width:0%"></div>
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <div class="footer-note" id="footerNote">Comparing against similar open jobs in the same category</div>
-    <div class="forecast-zone-label">⬡ FORECAST ZONE →</div>
+  <!-- Loading -->
+  <div class="state" id="stateLoading">
+    <div class="spinner"></div>
+    <div class="state-msg">Loading forecast data…</div>
+  </div>
+
+  <!-- Error: no connection -->
+  <div class="state hidden" id="stateNoConn">
+    <div class="state-icon">🔌</div>
+    <div class="state-title">Cannot connect to Bullhorn</div>
+    <div class="state-msg">This card can only run inside Bullhorn as a Custom Card on a Job record.</div>
+  </div>
+
+  <!-- Error: data error -->
+  <div class="state hidden" id="stateError">
+    <div class="state-icon">⚠️</div>
+    <div class="state-title">Could not load data</div>
+    <div class="state-msg" id="errMsg"></div>
+    <button class="retry-btn" onclick="init()">Retry</button>
   </div>
 
   <script>
-    // ─────────────────────────────────────────────
-    //  AppBridge bootstrap
-    // ─────────────────────────────────────────────
-    let appBridge = null;
-    let entityId  = null;
-    let chart     = null;
+  // ─────────────────────────────────────────────────────────────────
+  //  Util — ported from shared/app/util/util.ts
+  // ─────────────────────────────────────────────────────────────────
+  const ONE_DAY = 24 * 60 * 60 * 1000;
 
-    // Parse URL params (Bullhorn passes EntityID, EntityType, etc.)
-    function getParam(key) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(key);
-    }
+  function daysBetween(a, b) { return Math.round(Math.abs(a - b) / ONE_DAY); }
+  function daysSince(ts)     { return Math.round((Date.now() - ts) / ONE_DAY); }
+  function daysUntil(ts)     { return Math.round((ts - Date.now()) / ONE_DAY); }
+  function addDays(d, n)     { return new Date(d.getTime() + n * ONE_DAY); }
+  function subtractDays(d,n) { return new Date(d.getTime() - n * ONE_DAY); }
 
-    async function init() {
-      showLoading();
+  // Harmonic mean (matches compute-hmean behaviour — ignores zeros)
+  function harmonicMean(arr) {
+    const pos = arr.filter(n => n > 0);
+    if (!pos.length) return 0;
+    return pos.length / pos.reduce((s, n) => s + 1/n, 0);
+  }
 
-      try {
-        // ── 1. Connect via AppBridge (post-robot) ──
-        appBridge = await connectAppBridge();
+  function createHistoricJobs(jobs) {
+    const records = [];
+    jobs.forEach(job => {
+      if (!job.submissions?.data?.length || !job.placements?.data?.length) return;
+      if (job.submissions.data.length < job.submissions.total ||
+          job.placements.data.length < job.placements.total) return;
 
-        // ── 2. Get entity context ──
-        entityId = getParam('EntityID') || getParam('id');
-        if (!entityId) {
-          // Try AppBridge registered data
-          const reg = await appBridge.getRegistrationData();
-          entityId = reg && (reg.EntityID || reg.id);
-        }
+      const firstFill = [...job.placements.data].sort((a,b) => a.dateAdded - b.dateAdded)[0];
+      const firstSuccessfulSubmit = [...job.submissions.data]
+        .sort((a,b) => a.dateAdded - b.dateAdded)
+        .find(s => s.jobOrder?.id === firstFill.jobOrder?.id);
+      if (!firstSuccessfulSubmit) return;
+      if (firstSuccessfulSubmit.dateAdded > firstFill.dateAdded) return;
 
-        if (!entityId) throw new Error('No JobOrder ID received. Open this card from a Job record.');
+      const daysToFill   = Math.max(daysBetween(job.dateAdded, firstFill.dateAdded), 0);
+      const daysToSubmit = Math.max(daysBetween(job.dateAdded, firstSuccessfulSubmit.dateAdded), 0);
+      if (daysToFill === 0) return;
 
-        // ── 3. Fetch job data ──
-        const [job, similarJobs] = await Promise.all([
-          fetchJob(entityId),
-          fetchSimilarJobs(entityId)
-        ]);
-
-        // ── 4. Render ──
-        renderHeader(job);
-        renderStats(job, similarJobs);
-        renderChart(job, similarJobs);
-        hideLoading();
-
-      } catch (err) {
-        console.error('ForecastCard error:', err);
-        showError(err.message || String(err));
-      }
-    }
-
-    // ─────────────────────────────────────────────
-    //  AppBridge connector
-    // ─────────────────────────────────────────────
-    function connectAppBridge() {
-      return new Promise((resolve, reject) => {
-        // Novo AppBridge registers via postMessage
-        let resolved = false;
-
-        function onMessage(event) {
-          if (!event.data) return;
-          const msg = typeof event.data === 'string' ? tryParse(event.data) : event.data;
-          if (!msg) return;
-
-          // Handle registration handshake
-          if (msg.type === 'registration' || msg.event === 'registration') {
-            resolved = true;
-            window.removeEventListener('message', onMessage);
-            resolve(createBridgeProxy(event.source, event.origin, msg));
-          }
-        }
-
-        window.addEventListener('message', onMessage);
-
-        // Send registration request to parent
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'register' }, '*');
-        }
-
-        // Timeout fallback — works in dev/demo mode without parent
-        setTimeout(() => {
-          if (!resolved) {
-            window.removeEventListener('message', onMessage);
-            resolve(createDevBridgeProxy());
-          }
-        }, 2500);
+      records.push({
+        id:                       job.id,
+        title:                    job.title,
+        dateAdded:                job.dateAdded,
+        daysToFirstFill:          daysToFill,
+        daysToFirstSuccessfulSubmit: daysToSubmit,
+        submitToFillRate:         job.placements.total / job.submissions.total,
+        billRate:                 job.clientBillRate || 0,
       });
+    });
+    return records;
+  }
+
+  function createHistoricJobsAndAverages(numJobs, numSubmitted, numFilled, jobData) {
+    const jobs = createHistoricJobs(jobData);
+    const avgs = {
+      totalJobs:                   numJobs,
+      jobsSubmitted:               numSubmitted,
+      jobsFilled:                  numFilled,
+      daysToFirstFill:             harmonicMean(jobs.map(j => j.daysToFirstFill)),
+      daysToFirstSuccessfulSubmit: harmonicMean(jobs.map(j => j.daysToFirstSuccessfulSubmit)),
+      submitToFillRate:            numSubmitted > 0 ? numFilled / numSubmitted : 0,
+      billRate:                    harmonicMean(jobs.map(j => j.billRate)),
+    };
+    return { jobs, averages: avgs };
+  }
+
+  function computeAverages(categories) {
+    return {
+      totalJobs:                   categories.reduce((s,c) => s + c.averages.totalJobs, 0),
+      jobsSubmitted:               categories.reduce((s,c) => s + c.averages.jobsSubmitted, 0),
+      jobsFilled:                  categories.reduce((s,c) => s + c.averages.jobsFilled, 0),
+      daysToFirstFill:             harmonicMean(categories.map(c => c.averages.daysToFirstFill)),
+      daysToFirstSuccessfulSubmit: harmonicMean(categories.map(c => c.averages.daysToFirstSuccessfulSubmit)),
+      submitToFillRate:            harmonicMean(categories.map(c => c.averages.submitToFillRate)),
+      billRate:                    harmonicMean(categories.map(c => c.averages.billRate)),
+    };
+  }
+
+  function numOpeningsToAvgPlacements(n) { return Math.min(n,8) * 0.253 + 0.112; }
+  function avgSubmitsPerFill(n)          { return n * 0.516 + 2.62; }
+
+  function computeProbability(numSubs, daysRemaining, numOpenings, averages) {
+    const avgFills    = numOpeningsToAvgPlacements(numOpenings);
+    const avgSubmits  = avgSubmitsPerFill(avgFills);
+    const submitOpp   = (avgSubmits - numSubs) / avgSubmits;
+    const daysProb    = Math.max(daysRemaining / (averages.daysToFirstSuccessfulSubmit || 1), averages.submitToFillRate || 0);
+    return Math.min(Math.max(submitOpp * daysProb, 0), 1);
+  }
+
+  function getProbabilityScore(daysSpent, averages) {
+    if (daysSpent < averages.daysToFirstSuccessfulSubmit) return 'high';
+    if (daysSpent / (averages.daysToFirstSuccessfulSubmit || 1) < 3) return 'medium';
+    return 'low';
+  }
+
+  function calculateHistogram(numbers, maxBuckets) {
+    const h = new Array(maxBuckets).fill(0);
+    numbers.forEach(n => { if (n < h.length) h[n]++; });
+    return h;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  AppBridge via post-robot (same lib novo-elements uses)
+  // ─────────────────────────────────────────────────────────────────
+  function getParam(k) { return new URLSearchParams(location.search).get(k); }
+
+  let registered = false;
+  let regAttempts = 0;
+  const MAX_ATTEMPTS = 4;
+  const RETRY_MS = 500;
+
+  function register() {
+    regAttempts++;
+    postRobot.sendToParent('register', { title: 'La Fosse Forecast Card' }, { timeout: 5000 })
+      .then(() => { registered = true; onRegistered(true); })
+      .catch(() => {
+        if (regAttempts < MAX_ATTEMPTS) setTimeout(register, RETRY_MS);
+        else onRegistered(false);
+      });
+  }
+
+  function bhGet(relativeURL) {
+    return postRobot.sendToParent('httpGET', { relativeURL }, { timeout: 20000 })
+      .then(evt => {
+        const p = evt.data;
+        if (!p) throw new Error('Empty AppBridge response');
+        if (p.error) throw new Error(typeof p.error === 'string' ? p.error : JSON.stringify(p.error));
+        return p.data;
+      });
+  }
+
+  function bhPost(relativeURL, body) {
+    return postRobot.sendToParent('httpPOST', { relativeURL, data: body }, { timeout: 20000 })
+      .then(evt => {
+        const p = evt.data;
+        if (!p) throw new Error('Empty AppBridge response');
+        if (p.error) throw new Error(typeof p.error === 'string' ? p.error : JSON.stringify(p.error));
+        return p.data;
+      });
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Data fetching — mirrors recordCard.component.ts exactly
+  // ─────────────────────────────────────────────────────────────────
+  const JOB_FIELDS = [
+    'id','clientCorporation','title','dateAdded','startDate','dateClosed',
+    'numOpenings','clientBillRate','address(state)',
+    'submissions[10](dateAdded,jobOrder(id))',
+    'placements[10](dateAdded,jobOrder(id))',
+    'employmentType','status'
+  ].join(',');
+
+  function search(query, fields, count) {
+    return bhPost('search/JobOrder', { query, fields, count, sort:'-dateAdded', start:0 });
+  }
+
+  async function fetchCurrentJob(entityId) {
+    const res = await bhGet(`entity/JobOrder/${entityId}?fields=${JOB_FIELDS}&meta=basic`);
+    // AppBridge GET returns: { data: <entity>, meta: ... }
+    return res;
+  }
+
+  async function fetchAllHistoricData(job) {
+    const notDeleted            = 'isDeleted:false';
+    const withSub               = 'submissions.id:[0 TO 99999999999]';
+    const withPlac              = 'placements.id:[0 TO 99999999999]';
+    const compBase              = `clientCorporation.id:${job.clientCorporation.id} AND ${notDeleted}`;
+    const roleBase              = `address.state:${job.address.state} AND ${notDeleted}`;
+
+    const [c0, c1, c2, r0, r1, r2] = await Promise.all([
+      search(compBase,                           'id',        1),
+      search(`${compBase} AND ${withSub}`,       'id',        1),
+      search(`${compBase} AND ${withPlac}`,      JOB_FIELDS, 400),
+      search(roleBase,                           'id',        1),
+      search(`${roleBase} AND ${withSub}`,       'id',        1),
+      search(`${roleBase} AND ${withPlac}`,      JOB_FIELDS, 400),
+    ]);
+
+    return [
+      createHistoricJobsAndAverages(c0.total, c1.total, c2.total, c2.data),
+      createHistoricJobsAndAverages(r0.total, r1.total, r2.total, r2.data),
+    ];
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  App state
+  // ─────────────────────────────────────────────────────────────────
+  let currentJob       = null;
+  let historicCats     = null;   // [companyCategory, roleCategory]
+  let averages         = null;
+  let activeView       = 0;      // 0 = Company, 1 = Role
+  let chartInstance    = null;
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Rendering
+  // ─────────────────────────────────────────────────────────────────
+  function render() {
+    const cat  = historicCats[activeView];
+    const avgs = cat.averages;
+    const job  = currentJob;
+
+    // Header
+    document.getElementById('jobTitle').textContent = job.title || `Job #${job.id}`;
+    const corp = job.clientCorporation?.name || '';
+    document.getElementById('jobSub').textContent = `${corp} · Fill forecast`;
+
+    const bStatus = document.getElementById('badgeStatus');
+    bStatus.textContent = job.status || 'Open';
+    bStatus.className = 'badge ' + statusBadgeClass(job.status);
+    bStatus.classList.remove('hidden');
+
+    if (job.employmentType) {
+      const bType = document.getElementById('badgeType');
+      bType.textContent = job.employmentType;
+      bType.classList.remove('hidden');
     }
 
-    function tryParse(str) {
-      try { return JSON.parse(str); } catch { return null; }
+    // Toggle labels
+    document.getElementById('btnCompany').textContent = corp || 'Company';
+    document.getElementById('btnRole').textContent    =
+      job.address?.state ? `${job.address.state} Region` : 'Role / State';
+    document.getElementById('btnCompany').classList.toggle('active', activeView === 0);
+    document.getElementById('btnRole').classList.toggle('active', activeView === 1);
+
+    // Dates / days
+    const creationDate = new Date(job.dateAdded);
+    const startDate    = new Date(job.startDate || 0);
+    const daysOpen     = daysSince(creationDate.getTime());
+    const daysUntilStart = daysUntil(startDate.getTime());
+    const daysBetweenCreationStart = daysBetween(creationDate.getTime(), startDate.getTime());
+
+    let projectedStartDate, projectedFillDate;
+    if (daysBetweenCreationStart > 5 && daysUntilStart > 0) {
+      projectedStartDate = subtractDays(startDate, avgs.daysToFirstFill);
+      projectedFillDate  = startDate;
+    } else {
+      projectedStartDate = creationDate;
+      projectedFillDate  = addDays(creationDate, avgs.daysToFirstFill);
     }
+    const daysSpent     = daysSince(projectedStartDate.getTime());
+    const daysRemaining = daysUntil(projectedFillDate.getTime());
 
-    function createBridgeProxy(source, origin, regData) {
-      return {
-        _source: source,
-        _origin: origin,
-        _reg: regData,
-        getRegistrationData: () => Promise.resolve(regData),
-        httpGET: ({ relativeURL }) => {
-          return new Promise((resolve, reject) => {
-            const id = Math.random().toString(36).slice(2);
-            const handler = (e) => {
-              const d = typeof e.data === 'string' ? tryParse(e.data) : e.data;
-              if (d && d.requestId === id) {
-                window.removeEventListener('message', handler);
-                if (d.error) reject(new Error(d.error));
-                else resolve(d.data);
-              }
-            };
-            window.addEventListener('message', handler);
-            source.postMessage({ type: 'httpGET', relativeURL, requestId: id }, origin);
-            setTimeout(() => { window.removeEventListener('message', handler); reject(new Error('AppBridge timeout')); }, 10000);
-          });
-        }
-      };
-    }
+    const numSubs     = job.submissions?.total || 0;
+    const numOpenings = Math.min(job.numOpenings || 1, 1);
+    const fillRate    = avgs.submitToFillRate;
 
-    // Dev/demo proxy — uses real Bullhorn REST via URL params if available
-    function createDevBridgeProxy() {
-      return {
-        getRegistrationData: () => Promise.resolve({ EntityID: getParam('EntityID') }),
-        httpGET: ({ relativeURL }) => {
-          // Without AppBridge we can't make cross-domain calls; return mock data
-          return Promise.reject(new Error('dev-mode'));
-        }
-      };
-    }
+    // Stats
+    setValue('sSubs',     numSubs);
+    setValue('sAvgDays',  Math.round(avgs.daysToFirstFill) || '—');
+    setValue('sDaysOpen', daysOpen);
+    setValue('sFillRate', avgs.totalJobs > 0 ? `${Math.round(fillRate * 100)}%` : '—');
 
-    // ─────────────────────────────────────────────
-    //  Data fetching
-    // ─────────────────────────────────────────────
-    async function fetchJob(id) {
-      const fields = [
-        'id','title','status','employmentType','dateAdded','dateLastModified',
-        'numOpenings','submissions','interviews','placements','categories',
-        'clientCorporation','owner','salary','salaryUnit','skillList'
-      ].join(',');
+    // Deltas vs avg
+    setDelta('dSubs',     numSubs,    avgSubmitsPerFill(numOpeningsToAvgPlacements(numOpenings)), false, 'needed');
+    document.getElementById('dAvgDays').textContent = `${avgs.jobsFilled} filled jobs`;
+    setDelta('dDaysOpen',  daysOpen,  avgs.daysToFirstFill, true, 'vs avg fill');
+    document.getElementById('dFillRate').textContent = `${avgs.jobsFilled}/${avgs.totalJobs} jobs`;
 
-      try {
-        const data = await appBridge.httpGET({
-          relativeURL: `/entity/JobOrder/${id}?fields=${fields}`
-        });
-        return data.data || data;
-      } catch (e) {
-        if (e.message === 'dev-mode') return getMockJob(id);
-        throw e;
-      }
-    }
+    // Probability
+    const prob     = computeProbability(numSubs, daysRemaining, numOpenings, avgs);
+    const score    = getProbabilityScore(daysSpent, avgs);
+    const scoreColors = { high:'#3fb950', medium:'#d29922', low:'#f78166' };
+    const pct      = Math.round(prob * 100);
+    document.getElementById('probPct').textContent   = `${pct}% · ${score.toUpperCase()}`;
+    document.getElementById('probFill').style.width  = `${pct}%`;
+    document.getElementById('probFill').style.background = scoreColors[score];
 
-    async function fetchSimilarJobs(jobId) {
-      try {
-        // Get up to 20 open jobs (same entity type context)
-        const data = await appBridge.httpGET({
-          relativeURL: `/search/JobOrder?query=isDeleted:0 AND isOpen:true&fields=id,title,dateAdded,submissions,interviews,placements,status&count=20&start=0`
-        });
-        const items = (data.data || []).filter(j => String(j.id) !== String(jobId));
-        return items.slice(0, 15);
-      } catch (e) {
-        if (e.message === 'dev-mode') return getMockSimilarJobs(jobId);
-        throw e;
-      }
-    }
+    // Chart — histogram of daysToFirstFill for historic jobs
+    renderChart(cat.jobs, daysOpen, Math.round(avgs.daysToFirstFill));
 
-    // ─────────────────────────────────────────────
-    //  Rendering
-    // ─────────────────────────────────────────────
-    function renderHeader(job) {
-      document.getElementById('jobTitle').textContent = job.title || `Job #${job.id}`;
-      
-      const corp = job.clientCorporation && job.clientCorporation.name
-        ? ` · ${job.clientCorporation.name}`
-        : '';
-      document.getElementById('jobMeta').textContent = `Forecast · Submissions over time${corp}`;
+    // Show UI
+    ['header','toggleWrap','stats','chartArea','probWrap'].forEach(id =>
+      document.getElementById(id).classList.remove('hidden')
+    );
+    setState(null);
+  }
 
-      const statusBadge = document.getElementById('statusBadge');
-      statusBadge.textContent = job.status || '—';
-      statusBadge.className = 'badge ' + statusColor(job.status);
+  function renderChart(historicJobs, daysOpen, avgDays) {
+    const MAX_BUCKETS = Math.max(avgDays * 2 + 10, 60);
+    const daysToFillArr = historicJobs.map(j => j.daysToFirstFill);
+    const histogram = calculateHistogram(daysToFillArr, MAX_BUCKETS);
 
-      if (job.employmentType) {
-        const tb = document.getElementById('typeBadge');
-        tb.textContent = job.employmentType;
-        tb.className = 'badge badge-blue';
-        tb.style.display = '';
-      }
-    }
+    const labels = Array.from({ length: MAX_BUCKETS }, (_, i) => i % 10 === 0 ? `Day ${i}` : '');
 
-    function statusColor(s) {
-      if (!s) return 'badge-blue';
-      const sl = s.toLowerCase();
-      if (sl.includes('open') || sl.includes('active')) return 'badge-green';
-      if (sl.includes('hold') || sl.includes('pending')) return 'badge-amber';
-      if (sl.includes('closed') || sl.includes('cancelled') || sl.includes('filled')) return 'badge-red';
-      return 'badge-blue';
-    }
+    // Current job vertical line
+    const currentJobData = new Array(MAX_BUCKETS).fill(null);
+    if (daysOpen < MAX_BUCKETS) currentJobData[daysOpen] = Math.max(...histogram) || 1;
 
-    function renderStats(job, similar) {
-      const subs  = job.submissions  || 0;
-      const intvs = job.interviews   || 0;
-      const placs = job.placements   || 0;
+    // Avg vertical line
+    const avgData = new Array(MAX_BUCKETS).fill(null);
+    if (avgDays < MAX_BUCKETS) avgData[avgDays] = Math.max(...histogram) || 1;
 
-      const now     = Date.now();
-      const added   = job.dateAdded ? new Date(job.dateAdded) : new Date();
-      const daysOpen = Math.max(0, Math.floor((now - added.getTime()) / 86400000));
+    if (chartInstance) chartInstance.destroy();
 
-      // Averages from similar jobs
-      const avgSubs  = avg(similar, 'submissions');
-      const avgIntvs = avg(similar, 'interviews');
-      const avgPlacs = avg(similar, 'placements');
-      const avgDays  = similar.length
-        ? Math.floor(similar.reduce((a, j) => {
-            const d = j.dateAdded ? Math.floor((now - new Date(j.dateAdded)) / 86400000) : 0;
-            return a + d;
-          }, 0) / similar.length)
-        : null;
-
-      setStatCell('statSubs',  subs,  subs  - avgSubs,  'vs avg');
-      setStatCell('statIntvs', intvs, intvs - avgIntvs, 'vs avg');
-      setStatCell('statPlacs', placs, placs - avgPlacs,  'vs avg');
-      setStatCell('statDays',  daysOpen, avgDays !== null ? daysOpen - avgDays : null, 'vs avg open', true);
-    }
-
-    function setStatCell(valId, value, delta, label, invertDelta = false) {
-      document.getElementById(valId).textContent = value;
-      const el = document.getElementById(valId + 'Delta');
-      if (delta === null || delta === undefined || isNaN(delta)) {
-        el.innerHTML = '';
-        return;
-      }
-      const d = Math.round(delta);
-      const positive = invertDelta ? d < 0 : d > 0;
-      const negative = invertDelta ? d > 0 : d < 0;
-      const cls   = positive ? 'delta-up' : negative ? 'delta-down' : 'delta-flat';
-      const arrow = positive ? '↑' : negative ? '↓' : '→';
-      const sign  = d > 0 ? '+' : '';
-      el.innerHTML = `<span class="${cls}">${arrow} ${sign}${d}</span> <span style="color:var(--muted)">${label}</span>`;
-    }
-
-    function avg(arr, key) {
-      if (!arr.length) return 0;
-      return arr.reduce((s, j) => s + (j[key] || 0), 0) / arr.length;
-    }
-
-    function renderChart(job, similar) {
-      const now    = Date.now();
-      const added  = job.dateAdded ? new Date(job.dateAdded).getTime() : now - 30 * 86400000;
-      const totalDays = Math.max(1, Math.floor((now - added) / 86400000));
-
-      // Build week labels covering past + 4-week forecast
-      const weeks = buildWeekLabels(added, now, 4);
-      const cutoff = weeks.findIndex(w => w.ts > now);
-      const splitAt = cutoff === -1 ? weeks.length : cutoff;
-
-      // This job: synthetic cumulative curve based on final counts
-      const jobSubs  = job.submissions || 0;
-      const jobCurve = growthCurve(jobSubs, weeks.length, splitAt);
-
-      // Similar jobs average curve
-      const avgFinal = avg(similar, 'submissions');
-      const avgCurve = growthCurve(avgFinal, weeks.length, splitAt);
-
-      // Forecast portion (dashed extension of job curve)
-      const forecastData = jobCurve.map((v, i) => i >= splitAt - 1 ? v : null);
-      const actualData   = jobCurve.map((v, i) => i <= splitAt ? v : null);
-
-      const labels = weeks.map(w => w.label);
-
-      // Destroy existing chart
-      if (chart) chart.destroy();
-
-      const ctx = document.getElementById('forecastChart').getContext('2d');
-
-      // Forecast background plugin
-      const forecastBg = {
-        id: 'forecastBg',
-        beforeDraw(chart) {
-          const { ctx, chartArea, scales } = chart;
-          if (!chartArea) return;
-          // Find x position of split
-          const xScale = scales.x;
-          const splitPx = xScale.getPixelForValue(splitAt - 1);
-          ctx.save();
-          ctx.fillStyle = 'rgba(88,166,255,0.05)';
-          ctx.fillRect(splitPx, chartArea.top, chartArea.right - splitPx, chartArea.bottom - chartArea.top);
-          ctx.restore();
-        }
-      };
-
-      chart = new Chart(ctx, {
-        type: 'line',
-        plugins: [forecastBg],
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'This Job',
-              data: actualData,
-              borderColor: '#58a6ff',
-              backgroundColor: 'rgba(88,166,255,0.12)',
-              pointBackgroundColor: '#58a6ff',
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-            },
-            {
-              label: 'Forecast',
-              data: forecastData,
-              borderColor: 'rgba(88,166,255,0.55)',
-              backgroundColor: 'rgba(88,166,255,0.06)',
-              borderDash: [5, 4],
-              pointBackgroundColor: 'rgba(88,166,255,0.4)',
-              pointRadius: 2.5,
-              borderWidth: 1.5,
-              tension: 0.4,
-              fill: false,
-            },
-            {
-              label: 'Similar Jobs (avg)',
-              data: avgCurve.map((v, i) => i <= splitAt ? v : null),
-              borderColor: '#8b949e',
-              backgroundColor: 'transparent',
-              borderDash: [3, 3],
-              pointRadius: 0,
-              borderWidth: 1.5,
-              tension: 0.4,
-              fill: false,
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#161b22',
-              borderColor: '#21262d',
-              borderWidth: 1,
-              titleColor: '#e6edf3',
-              bodyColor: '#8b949e',
-              titleFont: { family: 'DM Sans', size: 11, weight: '600' },
-              bodyFont: { family: 'DM Sans', size: 11 },
-              padding: 10,
-              callbacks: {
-                label(ctx) {
-                  if (ctx.parsed.y === null) return null;
-                  return ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y)}`;
-                }
-              }
-            }
+    const ctx = document.getElementById('chart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Historic jobs (days to fill)',
+            data: histogram,
+            backgroundColor: 'rgba(88,166,255,0.35)',
+            borderColor: 'rgba(88,166,255,0.7)',
+            borderWidth: 1,
+            borderRadius: 2,
           },
-          scales: {
-            x: {
-              grid: { color: 'rgba(33,38,45,0.8)' },
-              ticks: {
-                color: '#8b949e',
-                font: { family: 'DM Mono', size: 9 },
-                maxRotation: 0,
-                maxTicksLimit: 8
-              }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: 'rgba(33,38,45,0.8)' },
-              ticks: {
-                color: '#8b949e',
-                font: { family: 'DM Mono', size: 9 },
-                stepSize: 1,
-                callback: v => Number.isInteger(v) ? v : null
-              }
+          {
+            label: 'This job (days open)',
+            data: currentJobData,
+            type: 'line',
+            borderColor: '#f78166',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+            spanGaps: false,
+          },
+          {
+            label: 'Avg days to fill',
+            data: avgData,
+            type: 'line',
+            borderColor: 'rgba(88,166,255,0.7)',
+            borderDash: [4,3],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+            spanGaps: false,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#161b22',
+            borderColor: '#21262d',
+            borderWidth: 1,
+            titleColor: '#e6edf3',
+            bodyColor: '#8b949e',
+            titleFont: { family:'DM Sans', size:11, weight:'600' },
+            bodyFont:  { family:'DM Sans', size:11 },
+            callbacks: {
+              title: items => `Day ${items[0].dataIndex}`,
+              label: item => item.datasetIndex === 0
+                ? ` ${item.parsed.y} job${item.parsed.y !== 1 ? 's' : ''} filled`
+                : ` ${item.dataset.label}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color:'rgba(33,38,45,0.8)' },
+            ticks: { color:'#8b949e', font:{ family:'DM Mono', size:9 }, maxRotation:0 }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color:'rgba(33,38,45,0.8)' },
+            ticks: {
+              color:'#8b949e', font:{ family:'DM Mono', size:9 },
+              stepSize: 1,
+              callback: v => Number.isInteger(v) ? v : null
             }
           }
         }
-      });
-    }
-
-    // Build weekly intervals from start to now + forecastWeeks
-    function buildWeekLabels(startMs, nowMs, forecastWeeks) {
-      const weeks = [];
-      let cursor = startMs;
-      const end = nowMs + forecastWeeks * 7 * 86400000;
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      while (cursor <= end) {
-        const d = new Date(cursor);
-        weeks.push({ ts: cursor, label: `${monthNames[d.getMonth()]} ${d.getDate()}` });
-        cursor += 7 * 86400000;
       }
-      return weeks;
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Helpers
+  // ─────────────────────────────────────────────────────────────────
+  function setValue(id, val) { document.getElementById(id).textContent = val; }
+
+  function setDelta(id, actual, avg, invertGood, suffix) {
+    const el = document.getElementById(id);
+    const diff = Math.round(actual - avg);
+    const good = invertGood ? diff < 0 : diff > 0;
+    const bad  = invertGood ? diff > 0 : diff < 0;
+    const cls  = good ? 'up' : bad ? 'down' : '';
+    const arr  = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+    const sign = diff > 0 ? '+' : '';
+    el.innerHTML = `<span class="${cls}">${arr} ${sign}${diff}</span> ${suffix}`;
+  }
+
+  function statusBadgeClass(s) {
+    const sl = (s||'').toLowerCase();
+    if (sl.includes('open') || sl.includes('accepting')) return 'badge-green';
+    if (sl.includes('hold') || sl.includes('pending'))   return 'badge-yellow';
+    return 'badge-red';
+  }
+
+  function setState(id) {
+    ['stateLoading','stateNoConn','stateError'].forEach(s =>
+      document.getElementById(s).classList.add('hidden')
+    );
+    if (id) document.getElementById(id).classList.remove('hidden');
+  }
+
+  function switchView(idx) {
+    activeView = idx;
+    render();
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  Main flow — mirrors ngOnInit / onRegistered / getCurrentJobData
+  // ─────────────────────────────────────────────────────────────────
+  async function onRegistered(isRegistered) {
+    // Check all four params Bullhorn passes — same check as recordCard.component.ts
+    const entityId  = parseInt(getParam('EntityID'),  10);
+    const userId    = parseInt(getParam('UserID'),     10);
+    const corpId    = parseInt(getParam('CorporationID'), 10);
+    const plId      = parseInt(getParam('PrivateLabelID'), 10);
+    const connected = !!(entityId && userId && corpId && plId);
+
+    if (!isRegistered || !connected) {
+      setState('stateNoConn');
+      return;
     }
 
-    // Logistic-like growth curve ending at finalVal, length points, observed up to splitAt
-    function growthCurve(finalVal, length, splitAt) {
-      if (finalVal === 0 || length === 0) return new Array(length).fill(0);
-      return Array.from({ length }, (_, i) => {
-        const t = i / Math.max(splitAt - 1, 1);
-        // S-curve until split, then linear projection
-        if (i < splitAt) {
-          const s = 1 / (1 + Math.exp(-10 * (t - 0.5)));
-          return +(finalVal * s).toFixed(2);
-        } else {
-          // Linear extrapolation from last observed point
-          const rate = finalVal / Math.max(splitAt - 1, 1);
-          return +(finalVal + rate * (i - splitAt + 1)).toFixed(2);
-        }
-      });
-    }
+    try {
+      // 1. Get current job
+      const jobRes  = await fetchCurrentJob(entityId);
+      currentJob    = jobRes.data;
+      // submissions.total comes back on the nested object
+      currentJob.submissions = { total: jobRes.data.submissions?.total || 0, data: jobRes.data.submissions?.data || [] };
 
-    // ─────────────────────────────────────────────
-    //  UI state helpers
-    // ─────────────────────────────────────────────
-    function showLoading() {
-      document.getElementById('loadingState').classList.remove('hidden');
-      document.getElementById('errorState').classList.add('hidden');
-    }
+      // 2. Get all historic data (6 parallel searches)
+      historicCats  = await fetchAllHistoricData(currentJob);
+      averages      = computeAverages(historicCats);
 
-    function hideLoading() {
-      document.getElementById('loadingState').classList.add('hidden');
-    }
+      // 3. Render
+      render();
 
-    function showError(msg) {
-      hideLoading();
-      document.getElementById('errorMsg').textContent = msg;
-      document.getElementById('errorState').classList.remove('hidden');
+    } catch (err) {
+      console.error('ForecastCard error:', err);
+      setState('stateError');
+      document.getElementById('errMsg').textContent = err.message || String(err);
     }
+  }
 
-    // ─────────────────────────────────────────────
-    //  Mock data (dev/demo mode — no AppBridge)
-    // ─────────────────────────────────────────────
-    function getMockJob(id) {
-      const added = Date.now() - 42 * 86400000; // 42 days ago
-      return {
-        id: id || 12345,
-        title: 'Senior Data Engineer',
-        status: 'Open',
-        employmentType: 'Permanent',
-        dateAdded: added,
-        submissions: 14,
-        interviews: 6,
-        placements: 1,
-        clientCorporation: { name: 'La Fosse Associates' },
-        owner: { firstName: 'Matt', lastName: '' }
-      };
-    }
+  async function init() {
+    setState('stateLoading');
+    ['header','toggleWrap','stats','chartArea','probWrap'].forEach(id =>
+      document.getElementById(id).classList.add('hidden')
+    );
+    registered  = false;
+    regAttempts = 0;
+    register();
+  }
 
-    function getMockSimilarJobs(excludeId) {
-      const now = Date.now();
-      return [
-        { id: 1, title: 'Data Engineer', dateAdded: now - 55 * 86400000, submissions: 18, interviews: 7, placements: 2, status: 'Open' },
-        { id: 2, title: 'Analytics Engineer', dateAdded: now - 30 * 86400000, submissions: 9, interviews: 4, placements: 0, status: 'Open' },
-        { id: 3, title: 'Platform Engineer', dateAdded: now - 60 * 86400000, submissions: 22, interviews: 9, placements: 3, status: 'Open' },
-        { id: 4, title: 'ML Engineer', dateAdded: now - 20 * 86400000, submissions: 7, interviews: 2, placements: 0, status: 'Open' },
-        { id: 5, title: 'BI Developer', dateAdded: now - 35 * 86400000, submissions: 12, interviews: 5, placements: 1, status: 'Open' },
-      ].filter(j => String(j.id) !== String(excludeId));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Boot
-    // ─────────────────────────────────────────────
-    window.addEventListener('load', init);
+  window.addEventListener('load', init);
   </script>
 </body>
 </html>
