@@ -7,96 +7,165 @@
   <script src="//cdn.rawgit.com/krakenjs/post-robot/7da06445/dist/post-robot.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --bg:      #0d1117;
-      --surface: #161b22;
-      --surface2:#1c2128;
-      --border:  #21262d;
-      --text:    #e6edf3;
-      --muted:   #8b949e;
-      --blue:    #58a6ff;
-      --green:   #3fb950;
-      --yellow:  #d29922;
-      --red:     #f78166;
-      --purple:  #bc8cff;
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --panel-soft:#f8fafc;
+      --border:#e5eaf2;
+      --border-strong:#d6deea;
+      --text:#172033;
+      --muted:#667085;
+      --muted2:#98a2b3;
+      --blue:#2563eb;
+      --blue-soft:#eff6ff;
+      --green:#16a34a;
+      --green-soft:#ecfdf3;
+      --yellow:#d97706;
+      --yellow-soft:#fffbeb;
+      --red:#dc2626;
+      --red-soft:#fef2f2;
+      --purple:#7c3aed;
+      --purple-soft:#f5f3ff;
+      --shadow:0 10px 30px rgba(16,24,40,.08);
+      --shadow-sm:0 2px 10px rgba(16,24,40,.06);
     }
     html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; overflow:hidden; }
     body { display:flex; flex-direction:column; }
 
-    /* ── Header ── */
-    .header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 10px; border-bottom:1px solid var(--border); flex-shrink:0; }
-    .header-left { display:flex; align-items:center; gap:9px; }
-    .header-icon { width:26px; height:26px; background:linear-gradient(135deg,var(--blue),var(--purple)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
-    .header-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; }
-    .header-sub { font-size:10px; color:var(--muted); margin-top:1px; }
-    .badges { display:flex; gap:5px; flex-shrink:0; }
-    .badge { font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px; border-radius:20px; font-weight:500; white-space:nowrap; }
-    .badge-green  { background:rgba(63,185,80,0.15);   color:var(--green);  border:1px solid rgba(63,185,80,0.3); }
-    .badge-blue   { background:rgba(88,166,255,0.15);  color:var(--blue);   border:1px solid rgba(88,166,255,0.3); }
-    .badge-yellow { background:rgba(210,153,34,0.15);  color:var(--yellow); border:1px solid rgba(210,153,34,0.3); }
-    .badge-red    { background:rgba(247,129,102,0.15); color:var(--red);    border:1px solid rgba(247,129,102,0.3); }
+    a { color:inherit; text-decoration:none; }
+    a:hover { color:var(--blue); text-decoration:underline; }
 
-    /* ── RAG banner ── */
-    .rag { display:flex; align-items:center; gap:10px; padding:10px 14px; flex-shrink:0; border-bottom:1px solid var(--border); }
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px 12px; background:linear-gradient(135deg,#ffffff,#f7faff);
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .header-left { display:flex; align-items:center; gap:10px; min-width:0; }
+    .header-icon {
+      width:34px; height:34px; background:linear-gradient(135deg,var(--blue),#60a5fa);
+      border-radius:11px; display:flex; align-items:center; justify-content:center;
+      font-size:16px; flex-shrink:0; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,.24);
+    }
+    .header-title { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:360px; letter-spacing:-.01em; }
+    .header-sub { font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:360px; }
+    .badges { display:flex; gap:6px; flex-shrink:0; align-items:center; }
+    .badge {
+      font-family:'DM Sans',sans-serif; font-size:10px; padding:4px 9px; border-radius:999px;
+      font-weight:700; white-space:nowrap; border:1px solid transparent;
+    }
+    .badge-green  { background:var(--green-soft);  color:var(--green);  border-color:#bbf7d0; }
+    .badge-blue   { background:var(--blue-soft);   color:var(--blue);   border-color:#bfdbfe; }
+    .badge-yellow { background:var(--yellow-soft); color:var(--yellow); border-color:#fde68a; }
+    .badge-red    { background:var(--red-soft);    color:var(--red);    border-color:#fecaca; }
+
+    .rag {
+      display:flex; align-items:center; gap:10px; padding:10px 16px; flex-shrink:0;
+      border-bottom:1px solid var(--border); background:#fff;
+    }
     .rag-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .rag-label { font-size:13px; font-weight:600; }
-    .rag-reason { font-size:11px; color:var(--muted); margin-left:2px; }
-    .rag-green  .rag-dot { background:var(--green); box-shadow:0 0 6px rgba(63,185,80,0.5); }
+    .rag-label { font-size:13px; font-weight:800; }
+    .rag-reason { font-size:11px; color:var(--muted); margin-left:1px; }
+    .rag-green  { background:linear-gradient(90deg,var(--green-soft),#fff); }
+    .rag-yellow { background:linear-gradient(90deg,var(--yellow-soft),#fff); }
+    .rag-red    { background:linear-gradient(90deg,var(--red-soft),#fff); }
+    .rag-green  .rag-dot { background:var(--green); box-shadow:0 0 0 4px rgba(22,163,74,.12); }
     .rag-green  .rag-label { color:var(--green); }
-    .rag-yellow .rag-dot { background:var(--yellow); box-shadow:0 0 6px rgba(210,153,34,0.5); }
+    .rag-yellow .rag-dot { background:var(--yellow); box-shadow:0 0 0 4px rgba(217,119,6,.12); }
     .rag-yellow .rag-label { color:var(--yellow); }
-    .rag-red    .rag-dot { background:var(--red); box-shadow:0 0 6px rgba(247,129,102,0.5); }
+    .rag-red    .rag-dot { background:var(--red); box-shadow:0 0 0 4px rgba(220,38,38,.12); }
     .rag-red    .rag-label { color:var(--red); }
 
-    /* ── Stats ── */
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); flex-shrink:0; }
-    .stat { padding:9px 12px; border-right:1px solid var(--border); }
-    .stat:last-child { border-right:none; }
-    .stat-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; }
-    .stat-value { font-family:'DM Mono',monospace; font-size:16px; font-weight:500; line-height:1; }
-    .stat-delta { font-size:10px; margin-top:3px; color:var(--muted); }
-    .up   { color:var(--green); }
-    .down { color:var(--red); }
-    .warn { color:var(--yellow); }
+    .action-hero {
+      margin:10px 12px 0; padding:12px; background:var(--panel); border:1px solid var(--border);
+      border-radius:14px; box-shadow:var(--shadow-sm); display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+      flex-shrink:0;
+    }
+    .action-kicker { font-size:9px; color:var(--blue); font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+    .action-title { font-size:14px; line-height:1.25; font-weight:800; letter-spacing:-.01em; }
+    .action-detail { color:var(--muted); line-height:1.45; font-size:11px; margin-top:4px; }
+    .confidence {
+      min-width:86px; text-align:center; padding:8px 8px; border-radius:12px; background:var(--panel-soft); border:1px solid var(--border);
+    }
+    .confidence-label { color:var(--muted); font-size:9px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+    .confidence-value { font-family:'DM Mono',monospace; font-size:16px; font-weight:600; margin-top:2px; color:var(--blue); }
+    .confidence-sub { font-size:9px; color:var(--muted2); margin-top:1px; }
 
-    /* ── Chart ── */
-    .chart-area { padding:10px 14px 6px; flex-shrink:0; }
-    .chart-legend { display:flex; gap:12px; margin-bottom:7px; flex-wrap:wrap; }
+    .stats {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:10px 12px 8px;
+      flex-shrink:0; background:var(--bg);
+    }
+    .stat {
+      padding:10px 11px; background:var(--panel); border:1px solid var(--border);
+      border-radius:13px; box-shadow:var(--shadow-sm);
+    }
+    .stat-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; font-weight:700; }
+    .stat-value { font-family:'DM Mono',monospace; font-size:19px; font-weight:500; line-height:1; letter-spacing:-.03em; }
+    .stat-delta { font-size:10px; margin-top:5px; color:var(--muted); white-space:nowrap; }
+    .up   { color:var(--green); font-weight:700; }
+    .down { color:var(--red); font-weight:700; }
+    .warn { color:var(--yellow); font-weight:700; }
+
+    .chart-area {
+      margin:0 12px 10px; padding:12px; flex-shrink:0; background:var(--panel);
+      border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-sm);
+    }
+    .chart-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; }
+    .chart-title { font-size:12px; font-weight:800; }
+    .chart-legend { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--muted); }
     .legend-dot  { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
     .legend-dash { width:16px; height:2px; flex-shrink:0; }
-    .chart-canvas-wrap { position:relative; height:110px; }
+    .chart-canvas-wrap { position:relative; height:118px; }
 
-    /* ── Recommendations ── */
-    .recs { flex:1; overflow-y:auto; padding:0; min-height:0; }
-    .recs::-webkit-scrollbar { width:3px; }
-    .recs::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-    .rec { display:flex; align-items:flex-start; gap:9px; padding:9px 14px; border-bottom:1px solid var(--border); animation:fadeIn 0.2s ease both; }
-    .rec:last-child { border-bottom:none; }
+    .section-head {
+      display:flex; justify-content:space-between; align-items:center; padding:0 14px 7px; flex-shrink:0;
+    }
+    .section-title { font-size:12px; font-weight:800; color:var(--text); }
+    .section-sub { font-size:10px; color:var(--muted); }
+
+    .recs { flex:1; overflow-y:auto; padding:0 12px 10px; min-height:0; }
+    .recs::-webkit-scrollbar { width:4px; }
+    .recs::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:4px; }
+    .rec {
+      display:flex; align-items:flex-start; gap:10px; padding:11px 12px; margin-bottom:8px;
+      border:1px solid var(--border); border-radius:13px; background:var(--panel);
+      box-shadow:var(--shadow-sm); animation:fadeIn 0.2s ease both;
+    }
     @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
-    .rec-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+    .rec-icon {
+      width:26px; height:26px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+      font-size:14px; flex-shrink:0; margin-top:1px; background:var(--panel-soft);
+    }
     .rec-body { flex:1; min-width:0; }
-    .rec-title { font-size:12px; font-weight:500; color:var(--text); margin-bottom:2px; }
-    .rec-detail { font-size:10px; color:var(--muted); line-height:1.5; }
-    .rec-priority-high   .rec-title { color:var(--red); }
+    .rec-title { font-size:12px; font-weight:800; color:var(--text); margin-bottom:3px; }
+    .rec-detail { font-size:10.5px; color:var(--muted); line-height:1.45; }
+    .rec-priority-high { border-left:4px solid var(--red); background:linear-gradient(90deg,var(--red-soft),#fff 28%); }
+    .rec-priority-high .rec-title { color:var(--red); }
+    .rec-priority-medium { border-left:4px solid var(--yellow); background:linear-gradient(90deg,var(--yellow-soft),#fff 28%); }
     .rec-priority-medium .rec-title { color:var(--yellow); }
-    .rec-priority-low    .rec-title { color:var(--blue); }
+    .rec-priority-low { border-left:4px solid var(--blue); }
+    .rec-priority-low .rec-title { color:var(--text); }
 
-    /* ── Predicted fill ── */
-    .fill-pred { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-top:1px solid var(--border); flex-shrink:0; background:var(--surface); }
-    .fill-pred-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
-    .fill-pred-value { font-size:11px; font-weight:600; font-family:'DM Mono',monospace; }
+    .fill-pred {
+      display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; border-top:1px solid var(--border);
+      flex-shrink:0; background:var(--border); margin-top:auto;
+    }
+    .foot-cell { background:#fff; padding:9px 12px; min-width:0; }
+    .fill-pred-label { display:block; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:800; margin-bottom:3px; }
+    .fill-pred-value { display:block; font-size:11px; font-weight:800; font-family:'DM Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ── States ── */
     .state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
     .state-icon { font-size:26px; }
-    .state-title { font-size:13px; font-weight:600; }
-    .state-msg { font-size:11px; color:var(--muted); text-align:center; max-width:260px; line-height:1.6; }
+    .state-title { font-size:14px; font-weight:800; }
+    .state-msg { font-size:11px; color:var(--muted); text-align:center; max-width:280px; line-height:1.6; }
     .spinner { width:22px; height:22px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin 0.75s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
-    .retry-btn { margin-top:2px; padding:5px 14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:11px; border-radius:6px; cursor:pointer; }
+    .retry-btn {
+      margin-top:2px; padding:7px 14px; border:1px solid var(--border); background:var(--panel);
+      color:var(--text); font-family:inherit; font-size:11px; font-weight:700; border-radius:8px; cursor:pointer;
+    }
     .retry-btn:hover { border-color:var(--blue); color:var(--blue); }
     .hidden { display:none !important; }
   </style>
@@ -125,6 +194,20 @@
     <span class="rag-reason" id="ragReason">—</span>
   </div>
 
+  <!-- Suggested next action -->
+  <div class="action-hero hidden" id="actionHero">
+    <div>
+      <div class="action-kicker">Best next action</div>
+      <div class="action-title" id="actionTitle">—</div>
+      <div class="action-detail" id="actionDetail">—</div>
+    </div>
+    <div class="confidence">
+      <div class="confidence-label">Confidence</div>
+      <div class="confidence-value" id="confidenceValue">—</div>
+      <div class="confidence-sub" id="confidenceSub">—</div>
+    </div>
+  </div>
+
   <!-- Stats -->
   <div class="stats hidden" id="stats">
     <div class="stat">
@@ -151,10 +234,13 @@
 
   <!-- Chart -->
   <div class="chart-area hidden" id="chartArea">
-    <div class="chart-legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div><span>Company filled jobs</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#f78166"></div><span>Today</span></div>
-      <div class="legend-item"><div class="legend-dash" style="background:rgba(88,166,255,0.5)"></div><span>Avg fill</span></div>
+    <div class="chart-top">
+      <div class="chart-title">Fill-time benchmark</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div><span>Company filled jobs</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div><span>Today</span></div>
+        <div class="legend-item"><div class="legend-dash" style="background:rgba(37,99,235,0.55)"></div><span>Avg fill</span></div>
+      </div>
     </div>
     <div class="chart-canvas-wrap">
       <canvas id="chart"></canvas>
@@ -162,12 +248,26 @@
   </div>
 
   <!-- Recommendations -->
+  <div class="section-head hidden" id="recHeader">
+    <div class="section-title">Suggested actions</div>
+    <div class="section-sub" id="recCount">—</div>
+  </div>
   <div class="recs hidden" id="recs"></div>
 
-  <!-- Predicted fill -->
+  <!-- Forecast footer -->
   <div class="fill-pred hidden" id="fillPred">
-    <span class="fill-pred-label">Predicted fill</span>
-    <span class="fill-pred-value" id="fillPredValue">—</span>
+    <div class="foot-cell">
+      <span class="fill-pred-label">Predicted fill</span>
+      <span class="fill-pred-value" id="fillPredValue">—</span>
+    </div>
+    <div class="foot-cell">
+      <span class="fill-pred-label">Client avg fill</span>
+      <span class="fill-pred-value" id="avgFillValue">—</span>
+    </div>
+    <div class="foot-cell">
+      <span class="fill-pred-label">Avg CVs to fill</span>
+      <span class="fill-pred-value" id="avgCvsValue">—</span>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -203,6 +303,15 @@
   const daysBetween = (a, b) => Math.round(Math.abs(a - b) / ONE_DAY);
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const BH_CLASSIC_ROOT = 'https://cls20.bullhornstaffing.com/BullhornSTAFFING';
+  const recUrl = (entity, id) => `${BH_CLASSIC_ROOT}/OpenWindow.cfm?Entity=${entity}&id=${id}`;
+
+  function confidence(company) {
+    if (company.jobsFilled >= 10) return { score: 'High', detail: `${company.jobsFilled} filled jobs` };
+    if (company.jobsFilled >= 4) return { score: 'Med', detail: `${company.jobsFilled} filled jobs` };
+    if (company.jobsFilled >= 1) return { score: 'Low', detail: `${company.jobsFilled} filled job${company.jobsFilled === 1 ? '' : 's'}` };
+    return { score: 'Low', detail: 'No filled history' };
+  }
 
   function harmonicMean(arr) {
     const pos = arr.filter(n => n > 0);
@@ -506,10 +615,13 @@
       });
     }
 
+    const priorityRank = { high: 0, medium: 1, low: 2 };
+    recs.sort((a,b) => priorityRank[a.priority] - priorityRank[b.priority]);
+
     return {
       daysOpen, totalSubs, totalPlacs, velocityNow, velocityTrend,
       velocityPrev, daysSinceLastSub, interviews, offers,
-      avgFill, avgSubs, fillRate, subसVsExpected: subsVsExpected,
+      avgFill, avgSubs, fillRate, subsVsExpected,
       expectedSubsAtThisPoint, predictedFillLabel,
       rag, ragReason, recs
     };
@@ -522,7 +634,7 @@
 
   function render(job, company, data) {
     // Header
-    document.getElementById('jobTitle').textContent = job.title || `Job #${job.id}`;
+    document.getElementById('jobTitle').innerHTML = `<a href="${recUrl('JobOrder', job.id)}" target="_blank">${esc(job.title || `Job #${job.id}`)}</a>`;
     document.getElementById('jobSub').textContent =
       `${job.clientCorporation?.name || ''} · ${job.owner?.firstName || ''} ${job.owner?.lastName || ''}`.trim();
 
@@ -544,6 +656,14 @@
       data.rag === 'green' ? 'On Track' : data.rag === 'yellow' ? 'Needs Attention' : 'At Risk';
     document.getElementById('ragReason').textContent = `— ${data.ragReason}`;
 
+    // Best next action + confidence
+    const topAction = data.recs.find(r => r.priority === 'high') || data.recs.find(r => r.priority === 'medium') || data.recs[0];
+    document.getElementById('actionTitle').textContent = topAction ? topAction.title : 'No urgent action needed';
+    document.getElementById('actionDetail').textContent = topAction ? topAction.detail : 'Keep monitoring the job and maintain candidate momentum.';
+    const conf = confidence(company);
+    document.getElementById('confidenceValue').textContent = conf.score;
+    document.getElementById('confidenceSub').textContent = conf.detail;
+
     // Stats
     document.getElementById('sSubs').textContent     = data.totalSubs;
     document.getElementById('sVelocity').textContent = data.velocityNow;
@@ -551,10 +671,10 @@
     document.getElementById('sFillRate').textContent = `${data.fillRate}%`;
 
     // Stat deltas
-    const subsVsExp = data.subसVsExpected;
+    const subsVsExp = data.subsVsExpected;
     document.getElementById('dSubs').innerHTML = data.avgSubs > 0
       ? `<span class="${subsVsExp >= 0 ? 'up' : 'down'}">${subsVsExp >= 0 ? '↑' : '↓'} ${subsVsExp >= 0 ? '+' : ''}${subsVsExp} vs pace</span>`
-      : `<span class="warn">avg ${Math.round(data.avgSubs)} to fill</span>`;
+      : `<span class="warn">no pace avg</span>`;
 
     document.getElementById('dVelocity').innerHTML =
       data.velocityTrend === 'up'   ? `<span class="up">↑ vs last 2wk</span>` :
@@ -574,6 +694,8 @@
     // Recommendations
     const recsEl = document.getElementById('recs');
     recsEl.innerHTML = '';
+    const highCount = data.recs.filter(r => r.priority === 'high').length;
+    document.getElementById('recCount').textContent = `${data.recs.length} action${data.recs.length === 1 ? '' : 's'}${highCount ? ` · ${highCount} urgent` : ''}`;
     if (data.recs.length === 0) {
       recsEl.innerHTML = `<div class="rec"><div class="rec-body"><div class="rec-title" style="color:var(--green)">✅ All looking good</div><div class="rec-detail">No actions needed right now.</div></div></div>`;
     } else {
@@ -591,11 +713,13 @@
       });
     }
 
-    // Predicted fill
+    // Forecast footer
     document.getElementById('fillPredValue').textContent = data.predictedFillLabel;
+    document.getElementById('avgFillValue').textContent = data.avgFill > 0 ? `${Math.round(data.avgFill)} days` : 'No benchmark';
+    document.getElementById('avgCvsValue').textContent = data.avgSubs > 0 ? `${Math.round(data.avgSubs)} CVs` : 'No benchmark';
 
     // Show all sections
-    ['header','rag','stats','chartArea','recs','fillPred'].forEach(id =>
+    ['header','rag','actionHero','stats','chartArea','recHeader','recs','fillPred'].forEach(id =>
       document.getElementById(id).classList.remove('hidden')
     );
     setState(null);
@@ -631,8 +755,8 @@
           {
             label: 'Filled jobs',
             data: histogram,
-            backgroundColor: 'rgba(88,166,255,0.3)',
-            borderColor: 'rgba(88,166,255,0.6)',
+            backgroundColor: 'rgba(37,99,235,0.22)',
+            borderColor: 'rgba(37,99,235,0.55)',
             borderWidth: 1,
             borderRadius: 2,
           },
@@ -640,7 +764,7 @@
             label: 'Today',
             data: todayData,
             type: 'line',
-            borderColor: '#f78166',
+            borderColor: '#dc2626',
             borderWidth: 2,
             pointRadius: 0,
             fill: false,
@@ -650,7 +774,7 @@
             label: 'Avg fill',
             data: avgData,
             type: 'line',
-            borderColor: 'rgba(88,166,255,0.6)',
+            borderColor: 'rgba(37,99,235,0.55)',
             borderDash: [4,3],
             borderWidth: 1.5,
             pointRadius: 0,
@@ -665,11 +789,11 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#161b22',
-            borderColor: '#21262d',
+            backgroundColor: '#ffffff',
+            borderColor: '#e5eaf2',
             borderWidth: 1,
-            titleColor: '#e6edf3',
-            bodyColor: '#8b949e',
+            titleColor: '#172033',
+            bodyColor: '#667085',
             callbacks: {
               title: items => `Day ${items[0].dataIndex}`,
               label: item => item.datasetIndex === 0
@@ -680,14 +804,14 @@
         },
         scales: {
           x: {
-            grid: { color:'rgba(33,38,45,0.8)' },
-            ticks: { color:'#8b949e', font:{ family:'DM Mono', size:9 }, maxRotation:0 }
+            grid: { color:'rgba(229,234,242,0.85)' },
+            ticks: { color:'#98a2b3', font:{ family:'DM Mono', size:9 }, maxRotation:0 }
           },
           y: {
             beginAtZero: true,
-            grid: { color:'rgba(33,38,45,0.8)' },
+            grid: { color:'rgba(229,234,242,0.85)' },
             ticks: {
-              color:'#8b949e', font:{ family:'DM Mono', size:9 },
+              color:'#98a2b3', font:{ family:'DM Mono', size:9 },
               stepSize:1, callback: v => Number.isInteger(v) ? v : null
             }
           }
@@ -704,7 +828,7 @@
     if (sl.includes('accepting') || sl.includes('open')) return 'badge-green';
     if (sl.includes('hold') || sl.includes('pending'))   return 'badge-yellow';
     if (sl.includes('placed') || sl.includes('filled'))  return 'badge-blue';
-    return 'badge-red';
+    return 'badge-blue';
   }
 
   function setState(id) {
@@ -741,7 +865,7 @@
 
   async function init() {
     setState('stateLoading');
-    ['header','rag','stats','chartArea','recs','fillPred'].forEach(id =>
+    ['header','rag','actionHero','stats','chartArea','recHeader','recs','fillPred'].forEach(id =>
       document.getElementById(id).classList.add('hidden')
     );
     regAttempts = 0;
